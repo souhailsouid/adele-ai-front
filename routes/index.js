@@ -139,6 +139,11 @@ function getRoutes(user = null) {
             route: "/dashboards/trading/alerts",
           },
           {
+            name: "Analyse Financière",
+            key: "trading-financial-analysis",
+            route: "/dashboards/trading/financial-analysis",
+          },
+          {
             name: "Unusual Whales",
             key: "trading-unusual-whales",
             route: "/dashboards/trading/unusual-whales",

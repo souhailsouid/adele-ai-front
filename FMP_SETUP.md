@@ -23,17 +23,46 @@ Pour utiliser les fonctionnalités de trading, vous devez avoir un compte **FMP 
 
 ## 🚀 Fonctionnalités Disponibles
 
-### 1. Screener Intelligent
+### 1. Recherche d'Entreprises
+- **Recherche par nom** : Trouvez le symbole boursier d'une entreprise par son nom
+  ```javascript
+  import fmpClient from "/lib/fmp/client";
+  const results = await fmpClient.searchCompanyByName("apple");
+  // Retourne: [{ symbol: "AAPL", name: "Apple Inc.", ... }, ...]
+  ```
+
+### 2. Cotations Boursières
+- **Quote en temps réel** : Derniers cours, volumes et variations de prix
+  ```javascript
+  const quote = await fmpClient.getQuote("AAPL");
+  // Retourne: { symbol, price, volume, change, changePercent, ... }
+  ```
+
+### 3. Profil d'Entreprise
+- **Informations détaillées** : Capitalisation, secteur, PDG, cours de l'action
+  ```javascript
+  const profile = await fmpClient.getCompanyProfile("AAPL");
+  // Retourne: { symbol, companyName, marketCap, sector, ceo, price, ... }
+  ```
+
+### 4. Compte de Résultat
+- **États financiers** : Revenus, bénéfices nets, coûts (annuel ou trimestriel)
+  ```javascript
+  const incomeStatements = await fmpClient.getIncomeStatement("AAPL", "annual", 5);
+  // Retourne: Array de comptes de résultat sur 5 ans
+  ```
+
+### 5. Screener Intelligent
 - **Earnings Opportunities** : Détecte les opportunités avant les earnings (7 prochains jours)
 - **Oversold Bounces** : Identifie les rebonds sur actions oversold (RSI < 30)
 - **Unusual Volume** : Détecte les volumes anormaux (> 3x moyenne)
 
-### 2. Dashboard Marché
+### 6. Dashboard Marché
 - **Indices Majeurs** : SPY, QQQ, DIA, IWM
 - **Performance Secteurs** : Vue d'ensemble par secteur
 - **Earnings du Jour** : Calendrier des earnings du jour
 
-### 3. Système d'Alertes
+### 7. Système d'Alertes
 - **Alertes Prix** : Alerte quand un prix atteint un niveau spécifique
 - **Alertes Volume** : Alerte sur volume anormal
 - **Alertes RSI** : Alerte sur conditions oversold/overbought
