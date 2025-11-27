@@ -163,3 +163,4 @@ function InstitutionsList({ data = [], loading = false }) {
 
 export default InstitutionsList;
 
+

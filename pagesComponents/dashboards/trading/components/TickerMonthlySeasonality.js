@@ -191,3 +191,4 @@ function TickerMonthlySeasonality({ data = [], loading = false, ticker = "" }) {
 
 export default TickerMonthlySeasonality;
 
+

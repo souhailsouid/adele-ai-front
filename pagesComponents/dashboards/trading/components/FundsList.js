@@ -141,3 +141,4 @@ function FundsList({ data = [], loading = false, onFundSelect = () => {} }) {
 
 export default FundsList;
 
+

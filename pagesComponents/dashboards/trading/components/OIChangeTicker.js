@@ -203,3 +203,4 @@ function OIChangeTicker({ ticker = "", date = "" }) {
 
 export default OIChangeTicker;
 
+

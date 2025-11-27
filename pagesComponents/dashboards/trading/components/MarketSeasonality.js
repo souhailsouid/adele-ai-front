@@ -121,3 +121,4 @@ function MarketSeasonality({ data = [], loading = false }) {
 
 export default MarketSeasonality;
 
+

@@ -89,3 +89,4 @@ Le job `auto-commit` est désactivé par défaut pour éviter les boucles infini
 - Vérifiez que les credentials AWS sont valides
 - Vérifiez que l'application Amplify existe et est configurée
 
+

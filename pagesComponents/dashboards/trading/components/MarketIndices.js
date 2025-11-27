@@ -72,3 +72,4 @@ function MarketIndices({ data = [] }) {
 
 export default MarketIndices;
 
+

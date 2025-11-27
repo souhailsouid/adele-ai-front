@@ -31,3 +31,4 @@ function FlowAlertsWrapper({ ticker = "" }) {
 
 export default FlowAlertsWrapper;
 
+

@@ -172,3 +172,4 @@ function SpotExposuresByStrike({ ticker = "", date = "", onError = () => {}, onL
 
 export default SpotExposuresByStrike;
 
+

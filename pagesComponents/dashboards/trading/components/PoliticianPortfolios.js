@@ -308,3 +308,4 @@ function PoliticianPortfolios({ data = [], loading = false, politicianId = "" })
 
 export default PoliticianPortfolios;
 
+

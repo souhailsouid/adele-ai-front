@@ -289,3 +289,4 @@ function OHLCTicker({ ticker = "", date = "", endDate = "", timeframe = "1Y" }) 
 
 export default OHLCTicker;
 
+

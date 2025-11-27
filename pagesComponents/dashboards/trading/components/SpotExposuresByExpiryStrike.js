@@ -190,3 +190,4 @@ function SpotExposuresByExpiryStrike({ ticker = "", date = "", onError = () => {
 
 export default SpotExposuresByExpiryStrike;
 
+

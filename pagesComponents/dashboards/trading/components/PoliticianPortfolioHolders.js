@@ -152,3 +152,4 @@ function PoliticianPortfolioHolders({ data = [], loading = false, ticker = "" })
 
 export default PoliticianPortfolioHolders;
 
+

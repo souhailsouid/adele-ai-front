@@ -194,3 +194,4 @@ function AnalystRatings({ data = [], loading = false }) {
 
 export default AnalystRatings;
 
+

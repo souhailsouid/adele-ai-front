@@ -190,3 +190,4 @@ function SpotExposures({ ticker = "", date = "", onError = () => {}, onLoading =
 
 export default SpotExposures;
 
+

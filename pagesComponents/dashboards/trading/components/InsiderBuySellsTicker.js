@@ -173,3 +173,4 @@ function InsiderBuySellsTicker({ ticker = "" }) {
 
 export default InsiderBuySellsTicker;
 
+

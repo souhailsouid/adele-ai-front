@@ -190,3 +190,4 @@ function InstitutionOwnership({ data = [], loading = false, ticker = "" }) {
 
 export default InstitutionOwnership;
 
+

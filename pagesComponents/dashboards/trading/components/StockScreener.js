@@ -214,3 +214,4 @@ function StockScreener({ data = [], loading = false }) {
 
 export default StockScreener;
 
+

@@ -390,3 +390,4 @@ function TradingSeasonality() {
 
 export default TradingSeasonality;
 
+

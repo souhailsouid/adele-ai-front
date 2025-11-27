@@ -146,3 +146,4 @@ function ShortData({ data = [], loading = false, ticker = "" }) {
 
 export default ShortData;
 
+

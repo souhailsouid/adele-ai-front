@@ -164,3 +164,4 @@ function OptionContractHistoric({ data = [], loading = false, contractId = "" })
 
 export default OptionContractHistoric;
 
+

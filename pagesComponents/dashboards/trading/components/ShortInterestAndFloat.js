@@ -180,3 +180,4 @@ function ShortInterestAndFloat({ data = null, loading = false, ticker = "" }) {
 
 export default ShortInterestAndFloat;
 
+

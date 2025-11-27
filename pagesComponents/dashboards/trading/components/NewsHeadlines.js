@@ -178,3 +178,4 @@ function NewsHeadlines({ data = [], loading = false }) {
 
 export default NewsHeadlines;
 
+

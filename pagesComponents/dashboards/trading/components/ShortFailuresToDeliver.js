@@ -160,3 +160,4 @@ function ShortFailuresToDeliver({ data = [], loading = false, ticker = "" }) {
 
 export default ShortFailuresToDeliver;
 
+

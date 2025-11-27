@@ -256,3 +256,4 @@ function NetPremiumTicks({ ticker = "", date = "" }) {
 
 export default NetPremiumTicks;
 
+

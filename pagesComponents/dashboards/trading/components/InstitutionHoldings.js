@@ -222,3 +222,4 @@ function InstitutionHoldings({ data = [], loading = false, institutionName = "" 
 
 export default InstitutionHoldings;
 
+

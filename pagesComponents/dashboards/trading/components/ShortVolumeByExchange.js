@@ -157,3 +157,4 @@ function ShortVolumeByExchange({ data = [], loading = false, ticker = "" }) {
 
 export default ShortVolumeByExchange;
 
+

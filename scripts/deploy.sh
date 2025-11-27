@@ -57,3 +57,4 @@ echo -e "${BLUE}📊 Suivez le déploiement sur:${NC}"
 echo -e "   - GitHub Actions: https://github.com/$(git config --get remote.origin.url | sed 's/.*github.com[:/]\(.*\)\.git/\1/')/actions"
 echo -e "   - AWS Amplify Console"
 
+
