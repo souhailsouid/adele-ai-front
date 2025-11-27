@@ -64,7 +64,7 @@ function Error({ statusCode }) {
             : "Une erreur inattendue s'est produite. Veuillez réessayer plus tard."}
         </MDTypography>
         <MDButton variant="gradient" color="dark" onClick={handleGoHome}>
-          Retour à l'accueil
+          Retour à l&apos;accueil
         </MDButton>
       </MDBox>
     </PageLayout>
