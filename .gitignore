@@ -34,5 +34,6 @@ yarn-error.log*
 # vercel
 .vercel
 
-package-lock.json
+# Note: package-lock.json is included in the repo for AWS Amplify builds
+# package-lock.json
 yarn.lock
