@@ -1222,7 +1222,7 @@ Generate the script now:`;
                   <MDBox display="flex" justifyContent="center">
                     {!isRecording ? (
                       <MDButton
-                        variant="contained
+                        variant="contained"
                         size="large"
                         onClick={handleStartRecording}
                         disabled={cameraPermission === "denied" || !deviceStatus.camera}
@@ -1301,7 +1301,7 @@ Generate the script now:`;
                       </MDBox>
                     </MDBox>
                     <MDButton
-                      variant="outline
+                      variant="outlined"
                       startIcon={<Icon>refresh</Icon>}
                       onClick={() => {
                         setRecordedVideo(null);
@@ -1327,7 +1327,7 @@ Generate the script now:`;
                   Teleprompter
                 </MDTypography>
                 <MDButton
-                  variant="outli
+                  variant="outlined"
                   size="small"
                   startIcon={<Icon>auto_awesome</Icon>}
                   onClick={improveScriptWithAI}
@@ -1343,7 +1343,7 @@ Generate the script now:`;
                   <span key={index}>
                     <MDTypography
                       component="span"
-                      variant="body
+                      variant="body2"
                       fontWeight="medium"
                       sx={{ cursor: "pointer" }}
                       onClick={() => handleSectionClick(part)}
@@ -1369,7 +1369,7 @@ Generate the script now:`;
                     <MDBox key={index} mb={3}>
                       <MDTypography
                         variant="h6"
-                        fontWeight="medium
+                        fontWeight="medium"
                         mb={1}
                       >
                         {section.name}:
