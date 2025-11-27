@@ -1,0 +1,136 @@
+name: Deploy to AWS Amplify
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch: # Permet de déclencher manuellement
+
+env:
+  NODE_VERSION: '18.x'
+  AWS_REGION: 'eu-west-3' # Ajustez selon votre région
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Nécessaire pour les commits automatiques
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint
+        continue-on-error: true # Continue même si le linter échoue
+
+      - name: Build application
+        run: npm run build
+        env:
+          # Ajoutez vos variables d'environnement ici si nécessaire
+          # NODE_ENV: production
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-files
+          path: |
+            .next/
+            public/
+            package.json
+            package-lock.json
+          retention-days: 1
+
+  deploy:
+    name: Deploy to AWS Amplify
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy to Amplify
+        run: |
+          # Option 1: Déclencher un build Amplify via l'API
+          # Remplacez APP_ID et BRANCH_NAME par vos valeurs
+          APP_ID=${{ secrets.AMPLIFY_APP_ID }}
+          BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          
+          if [ -z "$APP_ID" ]; then
+            echo "⚠️ AMPLIFY_APP_ID n'est pas configuré. Le déploiement sera géré automatiquement par Amplify."
+            echo "✅ Amplify détectera automatiquement le push et déclenchera un build."
+          else
+            echo "🚀 Déclenchement du build Amplify..."
+            aws amplify start-job \
+              --app-id $APP_ID \
+              --branch-name $BRANCH_NAME \
+              --job-type RELEASE
+          fi
+
+  auto-commit:
+    name: Auto Commit Changes
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
+    # ⚠️ ATTENTION: Activez seulement si nécessaire pour éviter les boucles infinies
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run build to generate files
+        run: npm run build
+        continue-on-error: true
+
+      - name: Check for changes
+        id: check-changes
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit changes
+        if: steps.check-changes.outputs.has_changes == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git commit -m "chore: auto-commit build artifacts [skip ci]" || exit 0
+          git push || exit 0
+
