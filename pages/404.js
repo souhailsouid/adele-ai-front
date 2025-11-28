@@ -1,20 +1,10 @@
-/**
-=========================================================
-* NextJS Material Dashboard 2 PRO - v2.2.0
-=========================================================
-* Product Page: https://www.creative-tim.com/product/nextjs-material-dashboard-pro
-* Copyright 2023Adele.ai(https://www.creative-tim.com)
-Coded by www.creative-tim.com
- =========================================================
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*/
 
 import { useEffect } from "react";
 import Router from "next/router";
 
 export default function Custom404() {
   useEffect(() => {
-    Router.push("/dashboards/analytics");
+    Router.push("/");
   });
 
   return <div />;

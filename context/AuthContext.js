@@ -119,7 +119,7 @@ export const AuthProvider = ({ children }) => {
         
         // Rediriger seulement si demandé
         if (autoRedirect) {
-          router.push('/dashboards/analytics');
+          router.push('/');
         }
       }
       

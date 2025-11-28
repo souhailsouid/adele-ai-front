@@ -1,17 +1,4 @@
-/**
-=========================================================
-* NextJS Material Dashboard 2 PRO - v2.2.0
-=========================================================
 
-* Product Page: https://www.creative-tim.com/product/nextjs-material-dashboard-pro
-* Copyright 2023Adele.ai(https://www.creative-tim.com)
-
-Coded by www.creative-tim.com
-
- =========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*/
 
 /** 
   All of the routes for the NextJS Material Dashboard 2 PRO are added here,
@@ -41,7 +28,7 @@ import MDAvatar from "/components/MDAvatar";
 import Icon from "@mui/material/Icon";
 
 // Images
-import profilePicture from "/assets/images/team-3.jpg";
+import profilePicture from "/avatar.jpg";
 
 /**
  * Génère les routes avec les informations utilisateur dynamiques
@@ -56,7 +43,7 @@ function getRoutes(user = null) {
   let displayName = "User";
   if (user) {
     if (user.firstName && user.lastName) {
-      displayName = `${user.firstName} ${user.lastName}`;
+      displayName = `${user.firstName.split(" ")[0]}`;
     } else if (user.firstName) {
       displayName = user.firstName;
     } else if (user.lastName) {
@@ -75,16 +62,6 @@ function getRoutes(user = null) {
       icon: <MDAvatar src={profilePicture.src} alt={displayName} size="sm" />,
       collapse: [
         {
-          name: "My Profile",
-          key: "my-profile",
-          route: "/pages/profile/profile-overview",
-        },
-        {
-          name: "Settings",
-          key: "profile-settings",
-          route: "/pages/account/settings",
-        },
-        {
           name: "Logout",
           key: "logout",
           route: "/authentication/sign-in/basic",
@@ -97,17 +74,7 @@ function getRoutes(user = null) {
     name: "Dashboards",
     key: "dashboards",
     icon: <Icon fontSize="medium">dashboard</Icon>,
-    collapse: [
-      {
-        name: "Analytics",
-        key: "analytics",
-        route: "/dashboards/analytics",
-      },
-      {
-        name: "Sales",
-        key: "sales",
-        route: "/dashboards/sales",
-      },
+    collapse: [  
       {
         name: "Trading",
         key: "trading",
@@ -143,9 +110,17 @@ function getRoutes(user = null) {
             key: "trading-financial-analysis",
             route: "/dashboards/trading/financial-analysis",
           },
+        ],
+      },
+      {
+        name: "Unusual Whales",
+        key: "trading-unusual-whales",
+        icon: <Icon fontSize="medium">trending_up</Icon>,
+        collapse: [
+      
           {
-            name: "Unusual Whales",
-            key: "trading-unusual-whales",
+            name: "Unusual Whales Overview",
+            key: "trading-unusual-whales-overview",
             route: "/dashboards/trading/unusual-whales",
           },
           {
@@ -227,219 +202,10 @@ function getRoutes(user = null) {
       },
     ],
   },
-  { type: "title", title: "Pages", key: "title-pages" },
-  {
-    type: "collapse",
-    name: "Pages",
-    key: "pages",
-    icon: <Icon fontSize="medium">image</Icon>,
-    collapse: [
-      {
-        name: "Profile",
-        key: "profile",
-        collapse: [
-          {
-            name: "Profile Overview",
-            key: "profile-overview",
-            route: "/pages/profile/profile-overview",
-          },
-          {
-            name: "All Projects",
-            key: "all-projects",
-            route: "/pages/profile/all-projects",
-          },
-        ],
-      },
-      {
-        name: "Users",
-        key: "users",
-        collapse: [
-          {
-            name: "New User",
-            key: "new-user",
-            route: "/pages/users/new-user",
-          },
-        ],
-      },
-      {
-        name: "Account",
-        key: "account",
-        collapse: [
-          {
-            name: "Settings",
-            key: "settings",
-            route: "/pages/account/settings",
-          },
-          {
-            name: "Billing",
-            key: "billing",
-            route: "/pages/account/billing",
-          },
-          {
-            name: "Invoice",
-            key: "invoice",
-            route: "/pages/account/invoice",
-          },
-        ],
-      },
-      {
-        name: "Projects",
-        key: "projects",
-        collapse: [
-          {
-            name: "Timeline",
-            key: "timeline",
-            route: "/pages/projects/timeline",
-          },
-        ],
-      },
-      {
-        name: "Pricing Page",
-        key: "pricing-page",
-        route: "/pages/pricing-page",
-      },
-      { name: "RTL", key: "rtl", route: "/pages/rtl" },
-      {
-        name: "Widgets",
-        key: "widgets",
-        route: "/pages/widgets",
-      },
-      {
-        name: "Charts",
-        key: "charts",
-        route: "/pages/charts",
-      },
-      {
-        name: "Notfications",
-        key: "notifications",
-        route: "/pages/notifications",
-      },
-    ],
-  },
-  {
-    type: "collapse",
-    name: "Applications",
-    key: "applications",
-    icon: <Icon fontSize="medium">apps</Icon>,
-    collapse: [
-      {
-        name: "Kanban",
-        key: "kanban",
-        route: "/applications/kanban",
-      },
-      {
-        name: "Wizard",
-        key: "wizard",
-        route: "/applications/wizard",
-      },
-      {
-        name: "Data Tables",
-        key: "data-tables",
-        route: "/applications/data-tables",
-      },
-      {
-        name: "Calendar",
-        key: "calendar",
-        route: "/applications/calendar",
-      },
-    ],
-  },
-  {
-    type: "collapse",
-    name: "Ecommerce",
-    key: "ecommerce",
-    icon: <Icon fontSize="medium">shopping_basket</Icon>,
-    collapse: [
-      {
-        name: "Products",
-        key: "products",
-        collapse: [
-          {
-            name: "New Product",
-            key: "new-product",
-            route: "/ecommerce/products/new-product",
-          },
-          {
-            name: "Edit Product",
-            key: "edit-product",
-            route: "/ecommerce/products/edit-product",
-          },
-          {
-            name: "Product Page",
-            key: "product-page",
-            route: "/ecommerce/products/product-page",
-          },
-        ],
-      },
-      {
-        name: "Orders",
-        key: "orders",
-        collapse: [
-          {
-            name: "Order List",
-            key: "order-list",
-            route: "/ecommerce/orders/order-list",
-          },
-          {
-            name: "Order Details",
-            key: "order-details",
-            route: "/ecommerce/orders/order-details",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    type: "collapse",
-    name: "Authentication",
-    key: "authentication",
-    icon: <Icon fontSize="medium">content_paste</Icon>,
-    collapse: [
-      {
-        name: "Sign In",
-        key: "sign-in",
-        collapse: [
-          {
-            name: "Basic",
-            key: "basic",
-            route: "/authentication/sign-in/basic",
-          },
-          {
-            name: "Cover",
-            key: "cover",
-            route: "/authentication/sign-in/cover",
-          },
-          {
-            name: "Illustration",
-            key: "illustration",
-            route: "/authentication/sign-in/illustration",
-          },
-        ],
-      },
-      {
-        name: "Sign Up",
-        key: "sign-up",
-        collapse: [
-          {
-            name: "Cover",
-            key: "cover",
-            route: "/authentication/sign-up/cover",
-          },
-        ],
-      },
-      {
-        name: "Reset Password",
-        key: "reset-password",
-        collapse: [
-          {
-            name: "Cover",
-            key: "cover",
-            route: "/authentication/reset-password/cover",
-          },
-        ],
-      },
-    ],
-  },
+
+ 
+
+
   { type: "divider", key: "divider-1" },
   { type: "title", title: "Docs", key: "title-docs" },
   {
@@ -624,14 +390,7 @@ function getRoutes(user = null) {
     icon: <Icon sx={{ fontSize: "medium" }}>account_circle</Icon>,
     noCollapse: true,
   },
-  {
-    type: "collapse",
-    name: "Analytics",
-    key: "analytics",
-    route: "/dashboards/analytics",
-    icon: <Icon sx={{ fontSize: "medium" }}>analytics</Icon>,
-    noCollapse: true,
-  },
+
   {
     type: "collapse",
     name: "Change Log",

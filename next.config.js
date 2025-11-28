@@ -11,13 +11,14 @@ const withTM = require("next-transpile-modules")([
 
 module.exports = withTM({
   reactStrictMode: true,
-  async redirects() {
-    return [
-      {
-        source: "/",
-        destination: "/dashboards/analytics",
-        permanent: true,
-      },
-    ];
-  },
+  // Redirection supprimée - la page d'accueil est maintenant dans pages/index.js
+  // async redirects() {
+  //   return [
+  //     {
+  //       source: "/",
+  //       destination: "/pages/widgets",
+  //       permanent: true,
+  //     },
+  //   ];
+  // },
 });
