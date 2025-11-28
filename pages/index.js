@@ -582,77 +582,161 @@ function HomePage() {
               {loadingStates.stats ? (
                 <InfoCardsSkeleton />
               ) : (
-                <Grid container spacing={3}>
+                <Grid container spacing={2}>
                   <Grid item xs={12} sm={6} md={3}>
                     <Card
                       sx={{
+                        p: 2,
                         cursor: "pointer",
                         "&:hover": { boxShadow: 4 },
+                        height: "100%",
                       }}
                       onClick={() => router.push("/dashboards/trading/alerts")}
                     >
-                      <DefaultInfoCard
-                        icon="notifications_active"
-                        title="Alertes Actives"
-                        description="Alertes configurées"
-                        value={activeAlerts.length}
-                        color="info"
-                      />
+                      <MDBox display="flex" alignItems="center" gap={2} mb={1}>
+                        <MDBox
+                          display="flex"
+                          justifyContent="center"
+                          alignItems="center"
+                          bgColor="info"
+                          color="white"
+                          width="3rem"
+                          height="3rem"
+                          borderRadius="md"
+                          variant="gradient"
+                        >
+                          <Icon fontSize="medium">notifications_active</Icon>
+                        </MDBox>
+                        <MDBox flex={1}>
+                          <MDTypography variant="h6" fontWeight="bold" color="info">
+                            {activeAlerts.length}
+                          </MDTypography>
+                          <MDTypography variant="caption" color="text">
+                            Alertes Actives
+                          </MDTypography>
+                        </MDBox>
+                      </MDBox>
+                      <MDTypography variant="caption" color="text.secondary">
+                        Alertes configurées
+                      </MDTypography>
                     </Card>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <Card
                       sx={{
+                        p: 2,
                         cursor: "pointer",
                         "&:hover": { boxShadow: 4 },
+                        height: "100%",
                       }}
                       onClick={() => {
                         setCurrentTab("opportunities");
                       }}
                     >
-                      <DefaultInfoCard
-                        icon="trending_up"
-                        title="Opportunités"
-                        description="Meilleures opportunités"
-                        value={topOpportunities.length}
-                        color="success"
-                      />
+                      <MDBox display="flex" alignItems="center" gap={2} mb={1}>
+                        <MDBox
+                          display="flex"
+                          justifyContent="center"
+                          alignItems="center"
+                          bgColor="success"
+                          color="white"
+                          width="3rem"
+                          height="3rem"
+                          borderRadius="md"
+                          variant="gradient"
+                        >
+                          <Icon fontSize="medium">trending_up</Icon>
+                        </MDBox>
+                        <MDBox flex={1}>
+                          <MDTypography variant="h6" fontWeight="bold" color="success">
+                            {topOpportunities.length}
+                          </MDTypography>
+                          <MDTypography variant="caption" color="text">
+                            Opportunités
+                          </MDTypography>
+                        </MDBox>
+                      </MDBox>
+                      <MDTypography variant="caption" color="text.secondary">
+                        Meilleures opportunités
+                      </MDTypography>
                     </Card>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <Card
                       sx={{
+                        p: 2,
                         cursor: "pointer",
                         "&:hover": { boxShadow: 4 },
+                        height: "100%",
                       }}
                       onClick={() => router.push("/dashboards/trading/earnings")}
                     >
-                      <DefaultInfoCard
-                        icon="event"
-                        title="Earnings Aujourd&apos;hui"
-                        description="Annonces de résultats"
-                        value={marketData.earningsToday?.length || 0}
-                        color="warning"
-                      />
+                      <MDBox display="flex" alignItems="center" gap={2} mb={1}>
+                        <MDBox
+                          display="flex"
+                          justifyContent="center"
+                          alignItems="center"
+                          bgColor="warning"
+                          color="white"
+                          width="3rem"
+                          height="3rem"
+                          borderRadius="md"
+                          variant="gradient"
+                        >
+                          <Icon fontSize="medium">event</Icon>
+                        </MDBox>
+                        <MDBox flex={1}>
+                          <MDTypography variant="h6" fontWeight="bold" color="warning">
+                            {marketData.earningsToday?.length || 0}
+                          </MDTypography>
+                          <MDTypography variant="caption" color="text">
+                            Earnings Aujourd&apos;hui
+                          </MDTypography>
+                        </MDBox>
+                      </MDBox>
+                      <MDTypography variant="caption" color="text.secondary">
+                        Annonces de résultats
+                      </MDTypography>
                     </Card>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <Card
                       sx={{
+                        p: 2,
                         cursor: "pointer",
                         "&:hover": { boxShadow: 4 },
+                        height: "100%",
                       }}
                       onClick={() => {
                         setCurrentTab("opportunities");
                       }}
                     >
-                      <DefaultInfoCard
-                        icon="bar_chart"
-                        title="Volumes Anormaux"
-                        description="Détections récentes"
-                        value={unusualVolume.length}
-                        color="error"
-                      />
+                      <MDBox display="flex" alignItems="center" gap={2} mb={1}>
+                        <MDBox
+                          display="flex"
+                          justifyContent="center"
+                          alignItems="center"
+                          bgColor="error"
+                          color="white"
+                          width="3rem"
+                          height="3rem"
+                          borderRadius="md"
+                          variant="gradient"
+                        >
+                          <Icon fontSize="medium">bar_chart</Icon>
+                        </MDBox>
+                        <MDBox flex={1}>
+                          <MDTypography variant="h6" fontWeight="bold" color="error">
+                            {unusualVolume.length}
+                          </MDTypography>
+                          <MDTypography variant="caption" color="text">
+                            Volumes Anormaux
+                          </MDTypography>
+                        </MDBox>
+                      </MDBox>
+                      <MDTypography variant="caption" color="text.secondary">
+                        Détections récentes
+                      </MDTypography>
                     </Card>
                   </Grid>
                 </Grid>

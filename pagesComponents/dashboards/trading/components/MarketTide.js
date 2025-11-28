@@ -16,11 +16,37 @@ import MenuItem from "@mui/material/MenuItem";
 
 function MarketTide({ data = null, loading = false, interval = "5m", onIntervalChange = null }) {
   const formatNumber = (num) => {
-    if (!num || num === 0) return "-";
-    if (num >= 1_000_000_000) return `$${(num / 1_000_000_000).toFixed(2)}B`;
-    if (num >= 1_000_000) return `$${(num / 1_000_000).toFixed(2)}M`;
-    if (num >= 1_000) return `$${(num / 1_000).toFixed(2)}K`;
-    return `$${num.toFixed(2)}`;
+    if (num === null || num === undefined || isNaN(num)) return "-";
+    const absNum = Math.abs(num);
+    const sign = num < 0 ? "-" : "";
+    
+    if (absNum >= 1_000_000_000) {
+      return `${sign}$${(absNum / 1_000_000_000).toFixed(2)}B`;
+    }
+    if (absNum >= 1_000_000) {
+      return `${sign}$${(absNum / 1_000_000).toFixed(2)}M`;
+    }
+    if (absNum >= 1_000) {
+      return `${sign}$${(absNum / 1_000).toFixed(2)}K`;
+    }
+    return `${sign}$${absNum.toFixed(2)}`;
+  };
+
+  const formatCompactNumber = (num) => {
+    if (num === null || num === undefined || isNaN(num)) return "-";
+    const absNum = Math.abs(num);
+    const sign = num < 0 ? "-" : "";
+    
+    if (absNum >= 1_000_000_000) {
+      return `${sign}$${(absNum / 1_000_000_000).toFixed(1)}B`;
+    }
+    if (absNum >= 1_000_000) {
+      return `${sign}$${(absNum / 1_000_000).toFixed(1)}M`;
+    }
+    if (absNum >= 1_000) {
+      return `${sign}$${(absNum / 1_000).toFixed(1)}K`;
+    }
+    return `${sign}$${absNum.toLocaleString("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
   };
 
   const parseNumber = (value) => {
@@ -168,19 +194,33 @@ function MarketTide({ data = null, loading = false, interval = "5m", onIntervalC
               <MDTypography variant="caption" color="text.secondary" mt={0.5} display="block">
                 {formatTime(latest.timestamp)}
               </MDTypography>
-              <MDBox display="flex" gap={1} mt={1}>
-                <Chip
-                  label={`Net Call: ${formatNumber(netCallPremium)}`}
-                  color={netCallPremium > 0 ? "success" : "error"}
-                  size="small"
-                />
-                <Chip
-                  label={`Net Put: ${formatNumber(netPutPremium)}`}
-                  color={netPutPremium < 0 ? "success" : "error"}
-                  size="small"
-                />
+              <MDBox mt={1.5}>
+                <MDBox display="flex" justifyContent="space-between" mb={0.5}>
+                  <MDTypography variant="caption" color="text.secondary">
+                    Net Call:
+                  </MDTypography>
+                  <MDTypography 
+                    variant="caption" 
+                    fontWeight="medium"
+                    color={netCallPremium > 0 ? "success.main" : "error.main"}
+                  >
+                    {formatCompactNumber(netCallPremium)}
+                  </MDTypography>
+                </MDBox>
+                <MDBox display="flex" justifyContent="space-between">
+                  <MDTypography variant="caption" color="text.secondary">
+                    Net Put:
+                  </MDTypography>
+                  <MDTypography 
+                    variant="caption" 
+                    fontWeight="medium"
+                    color={netPutPremium < 0 ? "success.main" : "error.main"}
+                  >
+                    {formatCompactNumber(netPutPremium)}
+                  </MDTypography>
+                </MDBox>
               </MDBox>
-              <MDTypography variant="caption" color="text.secondary" mt={0.5} display="block">
+              <MDTypography variant="caption" color="text.secondary" mt={1} display="block" sx={{ fontSize: "0.65rem" }}>
                 Net Call = (Call Ask) - (Call Bid) | Net Put = (Put Ask) - (Put Bid)
               </MDTypography>
             </MDBox>
@@ -203,24 +243,49 @@ function MarketTide({ data = null, loading = false, interval = "5m", onIntervalC
                 fontWeight="bold"
                 color={getTideColor(totalNetCallPremium - totalNetPutPremium) === "success" ? "success.main" : getTideColor(totalNetCallPremium - totalNetPutPremium) === "error" ? "error.main" : "text"}
               >
-                {formatNumber(totalNetCallPremium - totalNetPutPremium)}
+                {formatCompactNumber(totalNetCallPremium - totalNetPutPremium)}
               </MDTypography>
-              <MDBox display="flex" gap={1} mt={1}>
-                <Chip
-                  label={`Total Net Call: ${formatNumber(totalNetCallPremium)}`}
-                  color={totalNetCallPremium > 0 ? "success" : "error"}
-                  size="small"
-                />
-                <Chip
-                  label={`Total Net Put: ${formatNumber(totalNetPutPremium)}`}
-                  color={totalNetPutPremium < 0 ? "success" : "error"}
-                  size="small"
-                />
-              </MDBox>
-              <MDBox mt={1}>
-                <MDTypography variant="caption" color="text.secondary" display="block">
-                  Moyenne: Call {formatNumber(avgNetCallPremium)} | Put {formatNumber(avgNetPutPremium)}
-                </MDTypography>
+              <MDBox mt={1.5}>
+                <MDBox display="flex" justifyContent="space-between" mb={0.5}>
+                  <MDTypography variant="caption" color="text.secondary">
+                    Total Net Call:
+                  </MDTypography>
+                  <MDTypography 
+                    variant="caption" 
+                    fontWeight="medium"
+                    color={totalNetCallPremium > 0 ? "success.main" : "error.main"}
+                  >
+                    {formatCompactNumber(totalNetCallPremium)}
+                  </MDTypography>
+                </MDBox>
+                <MDBox display="flex" justifyContent="space-between" mb={0.5}>
+                  <MDTypography variant="caption" color="text.secondary">
+                    Total Net Put:
+                  </MDTypography>
+                  <MDTypography 
+                    variant="caption" 
+                    fontWeight="medium"
+                    color={totalNetPutPremium < 0 ? "success.main" : "error.main"}
+                  >
+                    {formatCompactNumber(totalNetPutPremium)}
+                  </MDTypography>
+                </MDBox>
+                <MDBox display="flex" justifyContent="space-between" mt={1} pt={1} sx={{ borderTop: 1, borderColor: "divider" }}>
+                  <MDTypography variant="caption" color="text.secondary">
+                    Moyenne:
+                  </MDTypography>
+                  <MDBox display="flex" gap={1}>
+                    <MDTypography variant="caption" color="text.secondary">
+                      Call {formatCompactNumber(avgNetCallPremium)}
+                    </MDTypography>
+                    <MDTypography variant="caption" color="text.secondary">
+                      |
+                    </MDTypography>
+                    <MDTypography variant="caption" color="text.secondary">
+                      Put {formatCompactNumber(avgNetPutPremium)}
+                    </MDTypography>
+                  </MDBox>
+                </MDBox>
               </MDBox>
             </MDBox>
           </Grid>
@@ -242,14 +307,26 @@ function MarketTide({ data = null, loading = false, interval = "5m", onIntervalC
                 fontWeight="bold"
                 color={getTideColor(netVolume) === "success" ? "success.main" : getTideColor(netVolume) === "error" ? "error.main" : "text"}
               >
-                {formatNumber(Math.abs(netVolume))}
+                {formatCompactNumber(netVolume)}
               </MDTypography>
-              <MDTypography variant="caption" color="text.secondary" mt={0.5} display="block">
-                Dernier: {formatTime(latest.timestamp)}
-              </MDTypography>
-              <MDTypography variant="caption" color="text.secondary" mt={0.5} display="block">
-                Total journée: {formatNumber(Math.abs(totalNetVolume))}
-              </MDTypography>
+              <MDBox mt={1.5}>
+                <MDBox display="flex" justifyContent="space-between" mb={0.5}>
+                  <MDTypography variant="caption" color="text.secondary">
+                    Dernier:
+                  </MDTypography>
+                  <MDTypography variant="caption" fontWeight="medium" color="text">
+                    {formatTime(latest.timestamp)}
+                  </MDTypography>
+                </MDBox>
+                <MDBox display="flex" justifyContent="space-between">
+                  <MDTypography variant="caption" color="text.secondary">
+                    Total journée:
+                  </MDTypography>
+                  <MDTypography variant="caption" fontWeight="medium" color="text">
+                    {formatCompactNumber(totalNetVolume)}
+                  </MDTypography>
+                </MDBox>
+              </MDBox>
             </MDBox>
           </Grid>
 
