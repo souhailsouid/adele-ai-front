@@ -95,6 +95,8 @@ function CryptoWhalesTracker() {
   // États pour Top 100 ETH Wallets
   const [ethCategoryTab, setEthCategoryTab] = useState("Exchange");
   const [ethViewMode, setEthViewMode] = useState("holders"); // holders ou movements
+  const [ethMovements, setEthMovements] = useState([]);
+  const [ethMovementsLoading, setEthMovementsLoading] = useState(false);
 
   const chains = [
     { value: "0x1", label: "Ethereum", icon: "🔷" },
@@ -110,6 +112,89 @@ function CryptoWhalesTracker() {
     const ethWhales = getETHWhales();
     setTrackedWhales(ethWhales);
   }, []);
+
+  // Charger les mouvements des top holders ETH
+  useEffect(() => {
+    if (activeTab === 3 && ethViewMode === "movements") {
+      loadETHMovements();
+    }
+  }, [activeTab, ethViewMode]);
+
+  const loadETHMovements = async () => {
+    try {
+      setEthMovementsLoading(true);
+      const topHolders = getETHWhales().slice(0, 20); // Top 20 pour éviter trop de requêtes
+      const movements = [];
+
+      // Charger les transactions récentes pour chaque holder
+      for (const holder of topHolders) {
+        try {
+          const [historyData, tokenTransfersData] = await Promise.allSettled([
+            moralisClient.getWalletHistory(holder.address, "0x1"),
+            moralisClient.getWalletTokenTransfers(holder.address, "0x1", { limit: 10 }),
+          ]);
+
+          const history = historyData.status === "fulfilled"
+            ? (Array.isArray(historyData.value) ? historyData.value : historyData.value?.result || historyData.value?.data || [])
+            : [];
+
+          const tokenTransfers = tokenTransfersData.status === "fulfilled"
+            ? (Array.isArray(tokenTransfersData.value) ? tokenTransfersData.value : tokenTransfersData.value?.result || tokenTransfersData.value?.data || [])
+            : [];
+
+          // Traiter l'historique
+          history.slice(0, 5).forEach((tx) => {
+            const value = parseFloat(tx.value || 0) / Math.pow(10, 18); // Convertir wei en ETH
+            if (value > 0) {
+              const isIncoming = (tx.to_address || tx.to || "").toLowerCase() === holder.address.toLowerCase();
+              movements.push({
+                address: holder.name,
+                addressRaw: holder.address,
+                direction: isIncoming ? "Entrée" : "Sortie",
+                amount: value,
+                amountFormatted: `${isIncoming ? "+" : "-"}${value.toFixed(6)} ETH`,
+                valueUSD: value * 3000, // Prix approximatif ETH
+                hash: tx.hash || tx.transaction_hash,
+                date: tx.block_timestamp || tx.block_timestamp || new Date().toISOString(),
+                type: "native",
+              });
+            }
+          });
+
+          // Traiter les transferts de tokens
+          tokenTransfers.slice(0, 5).forEach((tx) => {
+            const decimals = parseInt(tx.token_decimals || 18);
+            const value = parseFloat(tx.value || 0) / Math.pow(10, decimals);
+            if (value > 0) {
+              const isIncoming = (tx.to_address || tx.to || "").toLowerCase() === holder.address.toLowerCase();
+              movements.push({
+                address: holder.name,
+                addressRaw: holder.address,
+                direction: isIncoming ? "Entrée" : "Sortie",
+                amount: value,
+                amountFormatted: `${isIncoming ? "+" : "-"}${value.toFixed(6)} ${tx.token_symbol || "TOKEN"}`,
+                valueUSD: value * (parseFloat(tx.token_price || 0) || 0),
+                hash: tx.transaction_hash || tx.hash,
+                date: tx.block_timestamp || new Date().toISOString(),
+                type: "token",
+                tokenSymbol: tx.token_symbol || "TOKEN",
+              });
+            }
+          });
+        } catch (error) {
+          console.error(`Error loading movements for ${holder.address}:`, error);
+        }
+      }
+
+      // Trier par date (plus récentes en premier) et limiter à 100
+      movements.sort((a, b) => new Date(b.date) - new Date(a.date));
+      setEthMovements(movements.slice(0, 100));
+    } catch (error) {
+      console.error("Error loading ETH movements:", error);
+    } finally {
+      setEthMovementsLoading(false);
+    }
+  };
 
   const handleSearch = async () => {
     const address = tokenAddress.trim();
@@ -1459,22 +1544,174 @@ function CryptoWhalesTracker() {
                         />
                       );
                     } else {
-                      // Mode: Mouvements (placeholder pour l'instant)
+                      // Mode: Mouvements
+                      if (ethMovementsLoading) {
+                        return (
+                          <MDBox textAlign="center" py={6}>
+                            <LinearProgress />
+                            <MDTypography variant="body2" color="text.secondary" mt={2}>
+                              Chargement des mouvements récents...
+                            </MDTypography>
+                          </MDBox>
+                        );
+                      }
+
+                      if (ethMovements.length === 0) {
+                        return (
+                          <MDBox textAlign="center" py={6}>
+                            <Icon sx={{ fontSize: 64, color: "text.secondary", mb: 2 }}>
+                              swap_vert
+                            </Icon>
+                            <MDTypography variant="h6" color="text.secondary" mb={1}>
+                              Aucun mouvement trouvé
+                            </MDTypography>
+                            <MDTypography variant="body2" color="text.secondary">
+                              Aucun mouvement récent pour les top holders Ethereum.
+                            </MDTypography>
+                          </MDBox>
+                        );
+                      }
+
+                      const movementsColumns = [
+                        {
+                          Header: "Adresse",
+                          accessor: "address",
+                          width: "20%",
+                          Cell: ({ value, row }) => (
+                            <MDBox>
+                              <MDTypography variant="body2" fontWeight="medium">
+                                {value}
+                              </MDTypography>
+                              <MDTypography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{ fontFamily: "monospace", fontSize: "0.7rem" }}
+                              >
+                                {row.original.addressRaw?.slice(0, 10)}...{row.original.addressRaw?.slice(-8)}
+                              </MDTypography>
+                            </MDBox>
+                          ),
+                        },
+                        {
+                          Header: "Direction",
+                          accessor: "direction",
+                          width: "10%",
+                          Cell: ({ value }) => (
+                            <Chip
+                              label={value}
+                              size="small"
+                              color={value === "Entrée" ? "success" : "error"}
+                              icon={
+                                <Icon fontSize="small">
+                                  {value === "Entrée" ? "arrow_downward" : "arrow_upward"}
+                                </Icon>
+                              }
+                            />
+                          ),
+                        },
+                        {
+                          Header: "Montant",
+                          accessor: "amountFormatted",
+                          width: "15%",
+                          Cell: ({ value, row }) => (
+                            <MDTypography
+                              variant="body2"
+                              fontWeight="medium"
+                              color={row.original.direction === "Entrée" ? "success.main" : "error.main"}
+                            >
+                              {value}
+                            </MDTypography>
+                          ),
+                        },
+                        {
+                          Header: "Valeur USD",
+                          accessor: "valueUSD",
+                          width: "15%",
+                          Cell: ({ value }) => (
+                            <MDTypography variant="body2">
+                              {formatCurrency(value || 0)}
+                            </MDTypography>
+                          ),
+                        },
+                        {
+                          Header: "Hash",
+                          accessor: "hash",
+                          width: "25%",
+                          Cell: ({ value }) => (
+                            <Tooltip title={value || ""}>
+                              <Link
+                                href={`https://etherscan.io/tx/${value}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                sx={{ textDecoration: "none" }}
+                              >
+                                <MDTypography
+                                  variant="caption"
+                                  sx={{
+                                    fontFamily: "monospace",
+                                    fontSize: "0.75rem",
+                                    color: "info.main",
+                                    "&:hover": { textDecoration: "underline" },
+                                  }}
+                                >
+                                  {value ? `${value.slice(0, 10)}...${value.slice(-8)}` : "N/A"}
+                                </MDTypography>
+                              </Link>
+                            </Tooltip>
+                          ),
+                        },
+                        {
+                          Header: "Date et heure",
+                          accessor: "date",
+                          width: "15%",
+                          Cell: ({ value }) => (
+                            <MDTypography variant="caption" color="text.secondary">
+                              {value
+                                ? new Date(value).toLocaleString("fr-FR", {
+                                    year: "numeric",
+                                    month: "2-digit",
+                                    day: "2-digit",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })
+                                : "N/A"}
+                            </MDTypography>
+                          ),
+                        },
+                      ];
+
+                      const movementsRows = ethMovements.map((movement, index) => ({
+                        address: movement.address,
+                        addressRaw: movement.addressRaw,
+                        direction: movement.direction,
+                        amountFormatted: movement.amountFormatted,
+                        valueUSD: movement.valueUSD,
+                        hash: movement.hash,
+                        date: movement.date,
+                      }));
+
+                      const movementsTableData = { columns: movementsColumns, rows: movementsRows };
+
                       return (
-                        <MDBox textAlign="center" py={6}>
-                          <Icon sx={{ fontSize: 64, color: "text.secondary", mb: 2 }}>
-                            swap_vert
-                          </Icon>
-                          <MDTypography variant="h6" color="text.secondary" mb={1}>
-                            Mouvements des Holders
-                          </MDTypography>
-                          <MDTypography variant="body2" color="text.secondary" mb={3}>
-                            Cette fonctionnalité affichera les mouvements récents des top holders Ethereum.
-                          </MDTypography>
-                          <MDTypography variant="caption" color="text.secondary">
-                            Source: OKLink - Mouvements des meilleurs holders
-                          </MDTypography>
-                        </MDBox>
+                        <>
+                          <MDBox mb={2}>
+                            <MDTypography variant="h6" fontWeight="medium" mb={1}>
+                              Mouvements des meilleurs holders
+                            </MDTypography>
+                            <MDTypography variant="caption" color="text.secondary">
+                              Changements dans les avoirs en tokens des top holders Ethereum. Mis à jour en temps réel.
+                            </MDTypography>
+                          </MDBox>
+                          <DataTable
+                            table={movementsTableData}
+                            canSearch={true}
+                            entriesPerPage={{ defaultValue: 20, entries: [10, 20, 50, 100] }}
+                            showTotalEntries={true}
+                            pagination={{ variant: "gradient", color: "dark" }}
+                            isSorted={true}
+                            noEndBorder={false}
+                          />
+                        </>
                       );
                     }
                   })()}
