@@ -1,17 +1,3 @@
-/**
-=========================================================
-* NextJS Material Dashboard 2 PRO - v2.2.0
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/nextjs-material-dashboard-pro
-* Copyright 2023Adele.ai(https://www.creative-tim.com)
-
-Coded by www.creative-tim.com
-
- =========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*/
 
 /** 
   All of the routes for the page layout of NextJS Material Dashboard 2 PRO are added here,
@@ -157,11 +143,6 @@ const pageRoutes = [
         name: "data tables",
         route: "/applications/data-tables",
         icon: "backup_table",
-      },
-      {
-        name: "campaigns",
-        route: "/campaigns",
-        icon: "campaign",
       },
       {
         name: "calendar",

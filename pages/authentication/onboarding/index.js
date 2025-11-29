@@ -195,9 +195,9 @@ function Onboarding() {
             
             // L'enrichissement est déclenché automatiquement en arrière-plan
             // Attendre 1 seconde pour afficher le message de succès
-            setTimeout(() => {
-                router.push("/campaigns");
-            }, 1500);
+            // setTimeout(() => {
+            //     // router.push("/campaigns");
+            // }, 1500);
         } catch (err) {
             console.error("Onboarding error:", err);
             setError(err.message || "Failed to create organization. Please try again.");

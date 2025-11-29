@@ -9,7 +9,7 @@ export const CRYPTO_WHALES = {
             name: "US Government Silk Road Seizure",
             type: "Government",
             chain: "BTC",
-            address: "bc1q592fx7le7cezt9nlxxvdfj0rll2xk70s4tgx37",
+            address: "bc1qjet9suh6lpyu8uwcseywkr9zcn55lawp83wzde",
             notes: "Saisie gouvernementale US - Silk Road",
         },
         {
@@ -23,7 +23,7 @@ export const CRYPTO_WHALES = {
             name: "US Government Bitfinex Hack Seizure",
             type: "Government",
             chain: "BTC",
-            address: "bc1q0v23xppg82qqjcc2h4m0y8f0tn7z2hz6x0ah2v",
+            address: "bc1qazcm763858nkj2dj986etajv6wquslv8uxwczt",
             notes: "Saisie gouvernementale US - Bitfinex Hack",
         },
         // ==================== BITINFOCHARTS RICH LIST ====================
@@ -77,13 +77,6 @@ export const CRYPTO_WHALES = {
             notes: "Source: BitInfoCharts Rich List - Rank #8 - 79,957 BTC",
         },
         {
-            name: "Silk Road FBI Confiscated",
-            type: "Government",
-            chain: "BTC",
-            address: "bc1qa5wkgaew2dkv56kfvj49j0av5nml45x9ek9hz6",
-            notes: "Source: BitInfoCharts Rich List - Rank #10 - 69,370 BTC",
-        },
-        {
             name: "Binance BTCB Reserve",
             type: "Exchange",
             chain: "BTC",
@@ -119,10 +112,16 @@ export const CRYPTO_WHALES = {
             notes: "Source: BitInfoCharts Rich List - Rank #21 - 37,927 BTC",
         },
         {
-            name: "UK Government Confiscated",
+            name: "US Government Bitfinex Hack Recovery (FBI)",
             type: "Government",
             chain: "BTC",
-            address: "bc1q7ydrtdn8z62xhslqyqtyt38mm4e2c4h3mxjkug",
+            address: "bc1qazcm763858nkj2dj986etajv6wquslv8uxwczt"
+        },
+        {
+            name: "UK Government Zhimin Qian & Jian Wen Fraud Funds",
+            type: "Government",
+            chain: "BTC",
+            address: "bc1q4vxn43l44h30nkluqfxd9eckf45vr2awz38lwa",
             notes: "Source: BitInfoCharts Rich List - Rank #22 - 36,000 BTC",
         },
         {

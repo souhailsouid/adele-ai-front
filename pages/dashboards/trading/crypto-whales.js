@@ -707,6 +707,66 @@ function CryptoWhalesTracker() {
         {/* Baleines Suivies */}
         {activeTab === 1 && (
           <>
+            {/* En-tête */}
+            <MDBox mb={3}>
+              <Card>
+                <MDBox p={3}>
+                  <MDTypography variant="h4" fontWeight="bold" mb={1}>
+                    ⭐ Baleines Suivies
+                  </MDTypography>
+                  <MDTypography variant="body2" color="text" mb={2}>
+                    Liste complète des baleines crypto suivies dans votre base de données
+                  </MDTypography>
+                </MDBox>
+              </Card>
+            </MDBox>
+
+            {/* Statistiques avec MiniStatisticsCard */}
+            <MDBox mb={3}>
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <MiniStatisticsCard
+                    title={{ text: "Total Baleines", fontWeight: "medium" }}
+                    count={trackedWhales.length}
+                    percentage={{ color: "primary", text: "" }}
+                    icon={{ color: "primary", component: "account_balance_wallet" }}
+                    direction="right"
+                    bgColor="white"
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <MiniStatisticsCard
+                    title={{ text: "Ethereum", fontWeight: "medium" }}
+                    count={trackedWhales.filter(w => w.chain === "ETH").length}
+                    percentage={{ color: "info", text: "" }}
+                    icon={{ color: "info", component: "account_balance" }}
+                    direction="right"
+                    bgColor="white"
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <MiniStatisticsCard
+                    title={{ text: "Bitcoin", fontWeight: "medium" }}
+                    count={trackedWhales.filter(w => w.chain === "BTC").length}
+                    percentage={{ color: "warning", text: "" }}
+                    icon={{ color: "warning", component: "currency_bitcoin" }}
+                    direction="right"
+                    bgColor="white"
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <MiniStatisticsCard
+                    title={{ text: "Exchanges", fontWeight: "medium" }}
+                    count={trackedWhales.filter(w => w.type === "Exchange").length}
+                    percentage={{ color: "success", text: "" }}
+                    icon={{ color: "success", component: "account_balance" }}
+                    direction="right"
+                    bgColor="white"
+                  />
+                </Grid>
+              </Grid>
+            </MDBox>
+
             {/* Filtres */}
             <MDBox mb={3}>
               <Card>
@@ -803,28 +863,13 @@ function CryptoWhalesTracker() {
               </Card>
             </MDBox>
 
-            {/* Liste des baleines */}
+            {/* DataTable avec les baleines */}
             <MDBox mb={3}>
               <Card>
                 <MDBox p={3}>
-                  <MDTypography variant="h6" fontWeight="medium" mb={2}>
-                    🐋 Baleines Suivies ({trackedWhales.length})
-                  </MDTypography>
-                  <TableContainer component={Paper} sx={{ maxHeight: 600 }}>
-                    <Table stickyHeader>
-                      <TableHead>
-                        <TableRow>
-                          <TableCell><strong>Nom</strong></TableCell>
-                          <TableCell><strong>Type</strong></TableCell>
-                          <TableCell><strong>Chaîne</strong></TableCell>
-                          <TableCell><strong>Adresse</strong></TableCell>
-                          <TableCell><strong>Status</strong></TableCell>
-                          <TableCell align="center"><strong>Actions</strong></TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {trackedWhales
-                          .filter((whale) => {
+                  {(() => {
+                    // Filtrer les baleines
+                    const filteredWhales = trackedWhales.filter((whale) => {
                             if (selectedWhaleType !== "all" && whale.type !== selectedWhaleType) return false;
                             if (selectedWhaleChain !== "all" && whale.chain !== selectedWhaleChain) return false;
                             if (whaleSearchQuery) {
@@ -836,73 +881,158 @@ function CryptoWhalesTracker() {
                               );
                             }
                             return true;
-                          })
-                          .map((whale, index) => (
-                            <TableRow key={index} hover>
-                              <TableCell>
+                    });
+
+                    if (filteredWhales.length === 0) {
+                      return (
+                        <MDBox textAlign="center" py={6}>
+                          <Icon sx={{ fontSize: 64, color: "text.secondary", mb: 2 }}>
+                            account_balance_wallet
+                          </Icon>
+                          <MDTypography variant="h6" color="text.secondary" mb={1}>
+                            Aucune baleine trouvée
+                          </MDTypography>
+                          <MDTypography variant="body2" color="text.secondary">
+                            Aucune baleine ne correspond aux filtres sélectionnés.
+                          </MDTypography>
+                        </MDBox>
+                      );
+                    }
+
+                    const columns = [
+                      {
+                        Header: "Nom",
+                        accessor: "name",
+                        width: "25%",
+                        Cell: ({ row }) => (
+                          <MDBox>
                                 <MDTypography variant="body2" fontWeight="medium">
-                                  {whale.name}
+                              {row.original.name}
                                 </MDTypography>
-                                {whale.notes && (
-                                  <MDTypography variant="caption" color="text">
-                                    {whale.notes}
+                            {row.original.notes && (
+                              <MDTypography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{
+                                  display: "-webkit-box",
+                                  WebkitLineClamp: 1,
+                                  WebkitBoxOrient: "vertical",
+                                  overflow: "hidden",
+                                }}
+                              >
+                                {row.original.notes}
                                   </MDTypography>
                                 )}
-                              </TableCell>
-                              <TableCell>
+                          </MDBox>
+                        ),
+                      },
+                      {
+                        Header: "Type",
+                        accessor: "type",
+                        width: "15%",
+                        Cell: ({ value }) => (
                                 <Chip
-                                  label={whale.type}
+                            label={value}
                                   size="small"
                                   color={
-                                    whale.type === "Government" ? "error" :
-                                    whale.type === "Exchange" ? "warning" :
-                                    whale.type === "Foundation" ? "info" :
-                                    whale.type === "Founder" ? "primary" :
-                                    "default"
-                                  }
-                                />
-                              </TableCell>
-                              <TableCell>
+                              value === "Government"
+                                ? "error"
+                                : value === "Exchange"
+                                ? "warning"
+                                : value === "Foundation"
+                                ? "info"
+                                : value === "Founder"
+                                ? "primary"
+                                : value === "Institution" || value === "Venture Fund"
+                                ? "info"
+                                : value === "Mining"
+                                ? "success"
+                                : "default"
+                            }
+                          />
+                        ),
+                      },
+                      {
+                        Header: "Chaîne",
+                        accessor: "chain",
+                        width: "10%",
+                        Cell: ({ value }) => (
                                 <Chip
-                                  label={whale.chain}
+                            label={value}
                                   size="small"
                                   variant="outlined"
-                                />
-                              </TableCell>
-                              <TableCell>
-                                <Box sx={{ fontFamily: "monospace", fontSize: "0.875rem" }}>
-                                  {whale.incomplete ? (
-                                    <Tooltip title="Adresse incomplète - À compléter">
-                                      <span style={{ color: "orange" }}>
-                                        {whale.address}...
-                                      </span>
-                                    </Tooltip>
-                                  ) : (
-                                    whale.address.length > 20
-                                      ? `${whale.address.slice(0, 10)}...${whale.address.slice(-8)}`
-                                      : whale.address
-                                  )}
-                                </Box>
-                              </TableCell>
-                              <TableCell>
-                                {whale.incomplete ? (
-                                  <Chip label="Incomplet" color="warning" size="small" />
-                                ) : whale.chain === "ETH" ? (
-                                  <Chip label="Suivi" color="success" size="small" />
-                                ) : (
-                                  <Chip label="Non supporté" color="default" size="small" />
-                                )}
-                              </TableCell>
-                              <TableCell align="center">
+                            color={value === "ETH" ? "info" : value === "BTC" ? "warning" : "default"}
+                          />
+                        ),
+                      },
+                      {
+                        Header: "Adresse",
+                        accessor: "address",
+                        width: "30%",
+                        Cell: ({ row }) => (
+                          <Tooltip title={row.original.address || ""}>
+                            <MDTypography
+                              variant="caption"
+                              sx={{
+                                fontFamily: "monospace",
+                                fontSize: "0.75rem",
+                                wordBreak: "break-all",
+                                color: row.original.incomplete ? "warning.main" : "text.secondary",
+                              }}
+                            >
+                              {row.original.incomplete ? (
+                                <>
+                                  {row.original.address}...
+                                  <Chip
+                                    label="Incomplet"
+                                    size="small"
+                                    color="warning"
+                                    sx={{ ml: 1 }}
+                                  />
+                                </>
+                              ) : row.original.address.length > 20 ? (
+                                `${row.original.address.slice(0, 10)}...${row.original.address.slice(-8)}`
+                              ) : (
+                                row.original.address
+                              )}
+                            </MDTypography>
+                          </Tooltip>
+                        ),
+                      },
+                      {
+                        Header: "Status",
+                        accessor: "status",
+                        width: "10%",
+                        Cell: ({ row }) => {
+                          if (row.original.incomplete) {
+                            return <Chip label="Incomplet" color="warning" size="small" />;
+                          }
+                          if (row.original.chain === "ETH") {
+                            return <Chip label="Suivi" color="success" size="small" />;
+                          }
+                          if (row.original.chain === "BTC") {
+                            return <Chip label="Suivi" color="success" size="small" />;
+                          }
+                          return <Chip label="Non supporté" color="default" size="small" />;
+                        },
+                      },
+                      {
+                        Header: "Actions",
+                        accessor: "actions",
+                        width: "15%",
+                        align: "center",
+                        Cell: ({ row }) => (
                                 <MDBox display="flex" gap={1} justifyContent="center">
-                                  {!whale.incomplete && whale.chain === "ETH" && (
+                            {!row.original.incomplete && row.original.chain === "ETH" && (
                                     <>
                                       <MDButton
                                         variant="outlined"
                                         size="small"
                                         color="info"
                                         onClick={() => {
-                                          router.push(`/dashboards/trading/wallet-details?address=${whale.address}`);
+                                    router.push(
+                                      `/dashboards/trading/wallet-details?address=${row.original.address}`
+                                    );
                                         }}
                                       >
                                         <Icon fontSize="small" sx={{ mr: 0.5 }}>
@@ -911,7 +1041,7 @@ function CryptoWhalesTracker() {
                                         Détails
                                       </MDButton>
                                       <Link
-                                        href={getEtherscanUrl(whale.address, "0x1")}
+                                  href={getEtherscanUrl(row.original.address, "0x1")}
                                         target="_blank"
                                         rel="noreferrer"
                                       >
@@ -924,9 +1054,25 @@ function CryptoWhalesTracker() {
                                       </Link>
                                     </>
                                   )}
-                                  {whale.chain === "BTC" && !whale.incomplete && (
+                            {row.original.chain === "BTC" && !row.original.incomplete && (
+                              <>
+                                <MDButton
+                                  variant="outlined"
+                                  size="small"
+                                  color="info"
+                                  onClick={() => {
+                                    router.push(
+                                      `/dashboards/trading/wallet-details?address=${row.original.address}`
+                                    );
+                                  }}
+                                >
+                                  <Icon fontSize="small" sx={{ mr: 0.5 }}>
+                                    account_balance_wallet
+                                  </Icon>
+                                  Détails
+                                </MDButton>
                                     <Link
-                                      href={`https://www.blockchain.com/explorer/addresses/btc/${whale.address}`}
+                                  href={`https://www.blockchain.com/explorer/addresses/btc/${row.original.address}`}
                                       target="_blank"
                                       rel="noreferrer"
                                     >
@@ -934,17 +1080,45 @@ function CryptoWhalesTracker() {
                                         <Icon fontSize="small" sx={{ mr: 0.5 }}>
                                           open_in_new
                                         </Icon>
-                                        Blockchain.com
+                                    Explorer
                                       </MDButton>
                                     </Link>
+                              </>
                                   )}
                                 </MDBox>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
+                        ),
+                      },
+                    ];
+
+                    const rows = filteredWhales.map((whale) => ({
+                      name: whale.name,
+                      type: whale.type,
+                      chain: whale.chain,
+                      address: whale.address,
+                      status: whale.incomplete
+                        ? "incomplete"
+                        : whale.chain === "ETH" || whale.chain === "BTC"
+                        ? "tracked"
+                        : "unsupported",
+                      notes: whale.notes || "",
+                      incomplete: whale.incomplete || false,
+                      actions: whale.address,
+                    }));
+
+                    const whalesTableData = { columns, rows };
+
+                    return (
+                      <DataTable
+                        table={whalesTableData}
+                        canSearch={true}
+                        entriesPerPage={{ defaultValue: 10, entries: [5, 10, 25, 50, 100] }}
+                        showTotalEntries={true}
+                        pagination={{ variant: "gradient", color: "dark" }}
+                        isSorted={true}
+                        noEndBorder={false}
+                      />
+                    );
+                  })()}
                 </MDBox>
               </Card>
             </MDBox>

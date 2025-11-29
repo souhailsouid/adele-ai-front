@@ -60,15 +60,13 @@ function SignIn() {
             // Après connexion réussie, rediriger
             if (redirectTo) {
                 router.push(redirectTo);
-            } else {
-                // Vérifier si l'utilisateur a une organisation
-                const hasOrg = localStorage.getItem("current_org_id");
+            // } else {
+            //     // Vérifier si l'utilisateur a une organisation
+            //     const hasOrg = localStorage.getItem("current_org_id");
 
-                if (hasOrg) {
-                    router.push("/campaigns");
-                } else {
-                    router.push("/authentication/onboarding");
-                }
+            //   else {
+            //         router.push("/authentication/onboarding");
+            //     }
             }
         } catch (err) {
             console.error("Sign in error:", err);

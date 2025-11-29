@@ -35,6 +35,7 @@ import MiniStatisticsCard from "/examples/Cards/StatisticsCards/MiniStatisticsCa
 
 // Services
 import moralisClient from "/lib/moralis/client";
+import bitcoinClient from "/lib/bitcoin/client";
 import metricsService from "/services/metricsService";
 import { CRYPTO_WHALES, getWhalesByChain } from "/config/cryptoWhales";
 
@@ -203,15 +204,97 @@ function WalletDetails() {
       return;
     }
 
-    // Si c'est une adresse BTC, on ne peut pas charger via Moralis
+    // Si c'est une adresse BTC, utiliser le client Bitcoin
     if (isBTC) {
-      setError(null);
-      setLoading(false);
-      // Trouver la baleine correspondante
-      const whale = CRYPTO_WHALES.whales.find(
-        w => w.address.toLowerCase() === address.toLowerCase() && w.chain === "BTC"
-      );
-      if (whale) {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Trouver la baleine correspondante
+        const whale = CRYPTO_WHALES.whales.find(
+          (w) => w.address.toLowerCase() === address.toLowerCase() && w.chain === "BTC"
+        );
+
+        // Charger les données Bitcoin
+        const [addressInfo, btcPrice] = await Promise.allSettled([
+          bitcoinClient.getAddressInfo(address),
+          bitcoinClient.getBitcoinPrice(),
+        ]);
+
+        const balanceData =
+          addressInfo.status === "fulfilled" ? addressInfo.value : null;
+        const priceData = btcPrice.status === "fulfilled" ? btcPrice.value : { usd: 60000 };
+
+        // Formater les transactions
+        const formattedTransactions = (balanceData?.transactions || []).map((tx) => ({
+          hash: tx.hash,
+          block_height: tx.block_height,
+          block_time: tx.block_time,
+          confirmations: tx.confirmations,
+          direction: tx.direction,
+          value: tx.value,
+          valueBTC: tx.value?.net || 0,
+          valueUSD: (tx.value?.net || 0) * (priceData.usd || 60000),
+          fees: tx.fees ? tx.fees / 100000000 : 0,
+          size: tx.size,
+        }));
+
+        // Calculer la valeur nette
+        const balanceBTC = balanceData?.balance?.balanceBTC || 0;
+        const netWorthUSD = balanceBTC * (priceData.usd || 60000);
+
+        // Créer des stats
+        const stats = balanceData?.balance
+          ? {
+              totalReceived: balanceData.balance.totalReceived || 0,
+              totalSent: balanceData.balance.totalSent || 0,
+              balance: balanceBTC,
+              transactionCount: balanceData.balance.n_tx || 0,
+              firstSeen: formattedTransactions[formattedTransactions.length - 1]?.block_time || null,
+            }
+          : null;
+
+        setWalletData({
+          tokens: [
+            {
+              token_address: "BTC",
+              symbol: "BTC",
+              name: "Bitcoin",
+              decimals: 8,
+              balance: (balanceBTC * 100000000).toString(), // En satoshis
+              balanceFormatted: balanceBTC,
+              valueUSD: netWorthUSD,
+              price: priceData.usd || 60000,
+            },
+          ],
+          nfts: [],
+          netWorth: {
+            total: netWorthUSD,
+            byChain: { BTC: netWorthUSD },
+            tokens: netWorthUSD,
+            nfts: 0,
+            defi: 0,
+          },
+          defiPositions: [],
+          transactions: formattedTransactions,
+          swaps: [],
+          stats: stats,
+          activeChains: ["BTC"],
+          profitability: null,
+          isBTC: true,
+          whaleInfo: whale,
+          btcPrice: priceData,
+        });
+        setSelectedChain("BTC");
+      } catch (err) {
+        console.error("Error loading Bitcoin wallet:", err);
+        setError(
+          err.message || "Erreur lors du chargement des données Bitcoin. Les APIs peuvent être temporairement indisponibles."
+        );
+        // Afficher quand même les infos de base si c'est une baleine connue
+        const whale = CRYPTO_WHALES.whales.find(
+          (w) => w.address.toLowerCase() === address.toLowerCase() && w.chain === "BTC"
+        );
         setWalletData({
           tokens: [],
           nfts: [],
@@ -226,21 +309,8 @@ function WalletDetails() {
           whaleInfo: whale,
         });
         setSelectedChain("BTC");
-      } else {
-        setWalletData({
-          tokens: [],
-          nfts: [],
-          netWorth: null,
-          defiPositions: [],
-          transactions: [],
-          swaps: [],
-          stats: null,
-          activeChains: [],
-          profitability: null,
-          isBTC: true,
-          whaleInfo: null,
-        });
-        setSelectedChain("BTC");
+      } finally {
+        setLoading(false);
       }
       return;
     }
@@ -973,12 +1043,60 @@ function WalletDetails() {
                             </MDTypography>
                           )}
                         </MDBox>
-                        <MDBox mt={2}>
-                          <MDTypography variant="body2" color="text.secondary">
-                            ℹ️ Les données détaillées des wallets Bitcoin ne sont pas disponibles via Moralis. 
-                            Consultez les explorateurs blockchain pour plus d&apos;informations.
-                          </MDTypography>
-                        </MDBox>
+                        {/* Statistiques Bitcoin si disponibles */}
+                        {walletData.stats && (
+                          <MDBox mt={3} mb={2}>
+                            <Grid container spacing={2}>
+                              <Grid item xs={6} sm={3}>
+                                <MDBox>
+                                  <MDTypography variant="caption" color="text.secondary">
+                                    Balance BTC
+                                  </MDTypography>
+                                  <MDTypography variant="h6" fontWeight="bold">
+                                    {formatNumber(walletData.stats.balance || 0)}
+                                  </MDTypography>
+                                </MDBox>
+                              </Grid>
+                              <Grid item xs={6} sm={3}>
+                                <MDBox>
+                                  <MDTypography variant="caption" color="text.secondary">
+                                    Valeur USD
+                                  </MDTypography>
+                                  <MDTypography variant="h6" fontWeight="bold" color="success.main">
+                                    {formatCurrency(walletData.netWorth?.total || 0)}
+                                  </MDTypography>
+                                </MDBox>
+                              </Grid>
+                              <Grid item xs={6} sm={3}>
+                                <MDBox>
+                                  <MDTypography variant="caption" color="text.secondary">
+                                    Total Reçu
+                                  </MDTypography>
+                                  <MDTypography variant="h6" fontWeight="bold">
+                                    {formatNumber(walletData.stats.totalReceived || 0)} BTC
+                                  </MDTypography>
+                                </MDBox>
+                              </Grid>
+                              <Grid item xs={6} sm={3}>
+                                <MDBox>
+                                  <MDTypography variant="caption" color="text.secondary">
+                                    Transactions
+                                  </MDTypography>
+                                  <MDTypography variant="h6" fontWeight="bold">
+                                    {walletData.stats.transactionCount || 0}
+                                  </MDTypography>
+                                </MDBox>
+                              </Grid>
+                            </Grid>
+                          </MDBox>
+                        )}
+                        {!walletData.stats && (
+                          <MDBox mt={2}>
+                            <MDTypography variant="body2" color="text.secondary">
+                              ℹ️ Chargement des données Bitcoin depuis BlockCypher/Blockchain.com...
+                            </MDTypography>
+                          </MDBox>
+                        )}
                       </>
                     ) : (
                       <MDBox>
@@ -1015,6 +1133,137 @@ function WalletDetails() {
                         ))}
                       </MDBox>
                     </MDBox>
+                  </MDBox>
+                </Card>
+              </MDBox>
+            )}
+
+            {/* Transactions Bitcoin */}
+            {walletData.isBTC && walletData.transactions && walletData.transactions.length > 0 && (
+              <MDBox mb={3}>
+                <Card>
+                  <MDBox p={3}>
+                    <MDTypography variant="h6" fontWeight="medium" mb={2}>
+                      📊 Transactions Récentes ({walletData.transactions.length})
+                    </MDTypography>
+                    {(() => {
+                      const columns = [
+                        {
+                          Header: "Hash",
+                          accessor: "hash",
+                          width: "25%",
+                          Cell: ({ value }) => (
+                            <Link
+                              href={`https://www.blockchain.com/explorer/transactions/btc/${value}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              sx={{ fontFamily: "monospace", fontSize: "0.875rem" }}
+                            >
+                              {value?.slice(0, 10)}...{value?.slice(-8)}
+                            </Link>
+                          ),
+                        },
+                        {
+                          Header: "Direction",
+                          accessor: "direction",
+                          width: "15%",
+                          Cell: ({ value }) => {
+                            const isIn = value === "in" || value === "both";
+                            const isOut = value === "out";
+                            return (
+                              <Chip
+                                label={
+                                  value === "both"
+                                    ? "Both"
+                                    : value === "in"
+                                    ? "Entrée"
+                                    : value === "out"
+                                    ? "Sortie"
+                                    : value
+                                }
+                                size="small"
+                                color={isIn ? "success" : isOut ? "error" : "default"}
+                                icon={
+                                  <Icon fontSize="small">
+                                    {isIn ? "arrow_downward" : isOut ? "arrow_upward" : "sync"}
+                                  </Icon>
+                                }
+                              />
+                            );
+                          },
+                        },
+                        {
+                          Header: "Valeur BTC",
+                          accessor: "valueBTC",
+                          align: "right",
+                          width: "15%",
+                          Cell: ({ value }) => (
+                            <MDTypography
+                              variant="body2"
+                              fontWeight="medium"
+                              color={value >= 0 ? "success.main" : "error.main"}
+                            >
+                              {value >= 0 ? "+" : ""}
+                              {formatNumber(value)} BTC
+                            </MDTypography>
+                          ),
+                        },
+                        {
+                          Header: "Valeur USD",
+                          accessor: "valueUSD",
+                          align: "right",
+                          width: "15%",
+                          Cell: ({ value }) => (
+                            <MDTypography variant="body2" fontWeight="medium">
+                              {formatCurrency(value)}
+                            </MDTypography>
+                          ),
+                        },
+                        {
+                          Header: "Confirmations",
+                          accessor: "confirmations",
+                          width: "10%",
+                          Cell: ({ value }) => (
+                            <Chip
+                              label={value >= 6 ? "Confirmé" : `${value} conf.`}
+                              size="small"
+                              color={value >= 6 ? "success" : "warning"}
+                            />
+                          ),
+                        },
+                        {
+                          Header: "Date",
+                          accessor: "block_time",
+                          width: "20%",
+                          Cell: ({ value }) => (
+                            <MDTypography variant="caption" color="text.secondary">
+                              {value ? new Date(value).toLocaleString("fr-FR") : "En attente"}
+                            </MDTypography>
+                          ),
+                        },
+                      ];
+
+                      const rows = walletData.transactions.map((tx) => ({
+                        hash: tx.hash,
+                        direction: tx.direction,
+                        valueBTC: tx.valueBTC || 0,
+                        valueUSD: tx.valueUSD || 0,
+                        confirmations: tx.confirmations || 0,
+                        block_time: tx.block_time,
+                      }));
+
+                      return (
+                        <DataTable
+                          table={{ columns, rows }}
+                          canSearch={true}
+                          entriesPerPage={{ defaultValue: 10, entries: [5, 10, 25, 50] }}
+                          showTotalEntries={true}
+                          pagination={{ variant: "gradient", color: "dark" }}
+                          isSorted={true}
+                          noEndBorder={false}
+                        />
+                      );
+                    })()}
                   </MDBox>
                 </Card>
               </MDBox>

@@ -110,6 +110,16 @@ function getRoutes(user = null) {
             key: "trading-financial-analysis",
             route: "/dashboards/trading/financial-analysis",
           },
+          {
+            name: "Estimations Analystes",
+            key: "trading-analyst-estimates",
+            route: "/dashboards/trading/analyst-estimates",
+          },
+          {
+            name: "Valorisation DCF",
+            key: "trading-dcf-valuation",
+            route: "/dashboards/trading/dcf-valuation",
+          },
         ],
       },
       {
@@ -235,198 +245,14 @@ function getRoutes(user = null) {
 
 
   { type: "divider", key: "divider-1" },
-  { type: "title", title: "Docs", key: "title-docs" },
-  {
-    type: "collapse",
-    name: "Basic",
-    key: "basic",
-    icon: <Icon fontSize="medium">upcoming</Icon>,
-    collapse: [
-      {
-        name: "Getting Started",
-        key: "getting-started",
-        collapse: [
-          {
-            name: "Overview",
-            key: "overview",
-            href: "https://www.creative-tim.com/learning-lab/nextjs/overview/material-dashboard/",
-          },
-          {
-            name: "License",
-            key: "license",
-            href: "https://www.creative-tim.com/learning-lab/nextjs/license/material-dashboard/",
-          },
-          {
-            name: "Quick Start",
-            key: "quick-start",
-            href: "https://www.creative-tim.com/learning-lab/nextjs/quick-start/material-dashboard/",
-          },
-          {
-            name: "Build Tools",
-            key: "build-tools",
-            href: "https://www.creative-tim.com/learning-lab/nextjs/build-tools/material-dashboard/",
-          },
-        ],
-      },
-      {
-        name: "Foundation",
-        key: "foundation",
-        collapse: [
-          {
-            name: "Colors",
-            key: "colors",
-            href: "https://www.creative-tim.com/learning-lab/nextjs/colors/material-dashboard/",
-          },
-          {
-            name: "Grid",
-            key: "grid",
-            href: "https://www.creative-tim.com/learning-lab/nextjs/grid/material-dashboard/",
-          },
-          {
-            name: "Typography",
-            key: "base-typography",
-            href: "https://www.creative-tim.com/learning-lab/nextjs/base-typography/material-dashboard/",
-          },
-          {
-            name: "Borders",
-            key: "borders",
-            href: "https://www.creative-tim.com/learning-lab/nextjs/borders/material-dashboard/",
-          },
-          {
-            name: "Box Shadows",
-            key: "box-shadows",
-            href: "https://www.creative-tim.com/learning-lab/nextjs/box-shadows/material-dashboard/",
-          },
-          {
-            name: "Functions",
-            key: "functions",
-            href: "https://www.creative-tim.com/learning-lab/nextjs/functions/material-dashboard/",
-          },
-          {
-            name: "Routing System",
-            key: "routing-system",
-            href: "https://www.creative-tim.com/learning-lab/nextjs/routing-system/material-dashboard/",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    type: "collapse",
-    name: "Components",
-    key: "/components",
-    icon: <Icon fontSize="medium">view_in_ar</Icon>,
-    collapse: [
-      {
-        name: "Alerts",
-        key: "alerts",
-        href: "https://www.creative-tim.com/learning-lab/nextjs/alerts/material-dashboard/",
-      },
-      {
-        name: "Avatar",
-        key: "avatar",
-        href: "https://www.creative-tim.com/learning-lab/nextjs/avatar/material-dashboard/",
-      },
-      {
-        name: "Badge",
-        key: "badge",
-        href: "https://www.creative-tim.com/learning-lab/nextjs/badge/material-dashboard/",
-      },
-      {
-        name: "Badge Dot",
-        key: "badge-dot",
-        href: "https://www.creative-tim.com/learning-lab/nextjs/badge-dot/material-dashboard/",
-      },
-      {
-        name: "Box",
-        key: "box",
-        href: "https://www.creative-tim.com/learning-lab/nextjs/box/material-dashboard/",
-      },
-      {
-        name: "Buttons",
-        key: "buttons",
-        href: "https://www.creative-tim.com/learning-lab/nextjs/buttons/material-dashboard/",
-      },
-      {
-        name: "Date Picker",
-        key: "date-picker",
-        href: "https://www.creative-tim.com/learning-lab/nextjs/datepicker/material-dashboard/",
-      },
-      {
-        name: "Dropzone",
-        key: "dropzone",
-        href: "https://www.creative-tim.com/learning-lab/nextjs/dropzone/material-dashboard/",
-      },
-      {
-        name: "Editor",
-        key: "editor",
-        href: "https://www.creative-tim.com/learning-lab/nextjs/quill/material-dashboard/",
-      },
-      {
-        name: "Input",
-        key: "input",
-        href: "https://www.creative-tim.com/learning-lab/nextjs/input/material-dashboard/",
-      },
-      {
-        name: "Pagination",
-        key: "pagination",
-        href: "https://www.creative-tim.com/learning-lab/nextjs/pagination/material-dashboard/",
-      },
-      {
-        name: "Progress",
-        key: "progress",
-        href: "https://www.creative-tim.com/learning-lab/nextjs/progress/material-dashboard/",
-      },
-      {
-        name: "Snackbar",
-        key: "snackbar",
-        href: "https://www.creative-tim.com/learning-lab/nextjs/snackbar/material-dashboard/",
-      },
-      {
-        name: "Social Button",
-        key: "social-button",
-        href: "https://www.creative-tim.com/learning-lab/nextjs/social-buttons/material-dashboard/",
-      },
-      {
-        name: "Typography",
-        key: "typography",
-        href: "https://www.creative-tim.com/learning-lab/nextjs/typography/material-dashboard/",
-      },
-    ],
-  },
-  {
-    type: "collapse",
-    name: "Dashboard",
-    key: "dashboard",
-    route: "/dashboards/sales",
-    icon: <Icon fontSize="medium">dashboard</Icon>,
-    noCollapse: true,
-  },
-  {
-    type: "collapse",
-    name: "Campaigns",
-    key: "campaigns",
-    route: "/campaigns",
-    icon: <Icon fontSize="medium">apps</Icon>,
-    noCollapse: true,
-  },
-  {
-    type: "collapse",
-    name: "Contacts",
-    key: "contacts",
-    route: "/ecommerce/orders/order-details",
-    icon: <Icon sx={{ fontSize: "medium" }}>account_circle</Icon>,
-    noCollapse: true,
-  },
 
-  {
-    type: "collapse",
-    name: "Change Log",
-    key: "changelog",
-    route: "https://github.com/creativetimofficial/ct-nextjs-material-dashboard-pro/blob/main/CHANGELOG.md",
-    icon: <Icon fontSize="medium">receipt_long</Icon>,
-    noCollapse: true,
-  },
+ 
+
+ 
+
+  
+
+  
   ];
 
   return routes;
