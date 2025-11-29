@@ -194,14 +194,42 @@ function getRoutes(user = null) {
             route: "/dashboards/trading/ticker-analysis",
           },
           {
+            name: "Historique des Prix",
+            key: "trading-price-history",
+            route: "/dashboards/trading/price-history",
+          },
+          {
             name: "13F Filings",
             key: "trading-13f-filings",
             route: "/dashboards/trading/13f-filings",
           },
         ],
       },
+      {
+        name: "Crypto",
+        key: "crypto",
+        icon: <Icon fontSize="medium">trending_up</Icon>,
+        collapse: [
+          {
+            name: "Crypto Overview",
+            key: "crypto-overview",
+            route: "/dashboards/trading/crypto",
+          },
+          {
+            name: "Crypto Whales",
+            key: "trading-crypto-whales",
+            route: "/dashboards/trading/crypto-whales",
+          },
+          {
+            name: "Wallet Details",
+            key: "trading-wallet-details",
+            route: "/dashboards/trading/wallet-details",
+          },
+        ],
+      },
     ],
-  },
+    },
+  
 
  
 

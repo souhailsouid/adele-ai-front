@@ -1,17 +1,4 @@
-/**
-=========================================================
-* NextJS Material Dashboard 2 PRO - v2.2.0
-=========================================================
 
-* Product Page: https://www.creative-tim.com/product/nextjs-material-dashboard-pro
-* Copyright 2023Adele.ai(https://www.creative-tim.com)
-
-Coded by www.creative-tim.com
-
- =========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*/
 
 import { useState, useEffect, useMemo } from "react";
 
@@ -63,7 +50,8 @@ import { AuthProvider, useAuth } from "/context/AuthContext";
 
 // Images
 import favicon from "/assets/images/favicon.png";
-import appleIcon from "/assets/images/apple-icon.png";
+import avatar from "/avatar.jpg";
+// import appleIcon from "/assets/images/apple-icon.png";
 import brandWhite from "/assets/images/logo-ct.png";
 import brandDark from "/assets/images/logo-ct-dark.png";
 
@@ -215,7 +203,7 @@ function MyApp({
           <Head>
             <meta name="viewport" content="width=device-width, initial-scale=1" />
             <link rel="shortcut icon" href={favicon.src} />
-            <link rel="apple-touch-icon" sizes="76x76" href={appleIcon.src} />
+            <link rel="apple-touch-icon" sizes="76x76" href={avatar.src} />
             <title>Adele.ai Dashboard</title>
           </Head>
           <Main Component={Component} pageProps={pageProps} />
