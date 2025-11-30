@@ -490,8 +490,8 @@ function HomePage() {
               label={
                 <MDBox display="flex" alignItems="center" gap={1}>
                   <Icon>trending_up</Icon>
-                  <span>Opportunités</span>
-                  {topOpportunities.length > 0 && (
+                  <span style={{ paddingRight: '10px' }}>Opportunités</span>
+                 {topOpportunities.length > 0 && (
                     <Badge badgeContent={topOpportunities.length} color="error" />
                   )}
                 </MDBox>
@@ -502,7 +502,7 @@ function HomePage() {
               label={
                 <MDBox display="flex" alignItems="center" gap={1}>
                   <Icon>article</Icon>
-                  <span>Actualités & Événements</span>
+                  <span style={{ paddingRight: '10px' }}>Actualités & Événements</span>
                   {marketNews.length > 0 && (
                     <Badge badgeContent={marketNews.length} color="info" />
                   )}

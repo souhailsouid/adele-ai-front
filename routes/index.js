@@ -68,191 +68,191 @@ function getRoutes(user = null) {
         },
       ],
     },
-  { type: "divider", key: "divider-0" },
-  {
-    type: "collapse",
-    name: "Dashboards",
-    key: "dashboards",
-    icon: <Icon fontSize="medium">dashboard</Icon>,
-    collapse: [  
-      {
-        name: "Trading",
-        key: "trading",
-        icon: <Icon fontSize="medium">trending_up</Icon>,
-        collapse: [
-          {
-            name: "Vue d'ensemble",
-            key: "trading-overview",
-            route: "/dashboards/trading/overview",
-          },
-          {
-            name: "Earnings",
-            key: "trading-earnings",
-            route: "/dashboards/trading/earnings",
-          },
-          {
-            name: "Screener",
-            key: "trading-screener",
-            route: "/dashboards/trading/screener",
-          },
-          {
-            name: "Calendrier Économique",
-            key: "trading-economic",
-            route: "/dashboards/trading/economic",
-          },
-          {
-            name: "Alertes",
-            key: "trading-alerts",
-            route: "/dashboards/trading/alerts",
-          },
-          {
-            name: "Analyse Financière",
-            key: "trading-financial-analysis",
-            route: "/dashboards/trading/financial-analysis",
-          },
-          {
-            name: "Estimations Analystes",
-            key: "trading-analyst-estimates",
-            route: "/dashboards/trading/analyst-estimates",
-          },
-          {
-            name: "Valorisation DCF",
-            key: "trading-dcf-valuation",
-            route: "/dashboards/trading/dcf-valuation",
-          },
-        ],
-      },
-      {
-        name: "Unusual Whales",
-        key: "trading-unusual-whales",
-        icon: <Icon fontSize="medium">trending_up</Icon>,
-        collapse: [
-      
-          {
-            name: "Unusual Whales Overview",
-            key: "trading-unusual-whales-overview",
-            route: "/dashboards/trading/unusual-whales",
-          },
-          {
-            name: "Congress",
-            key: "trading-congress",
-            route: "/dashboards/trading/congress",
-          },
-          {
-            name: "Correlations",
-            key: "trading-correlations",
-            route: "/dashboards/trading/correlations",
-          },
-          {
-            name: "Greek Flow",
-            key: "trading-greek-flow",
-            route: "/dashboards/trading/greek-flow",
-          },
-          {
-            name: "Stock State",
-            key: "trading-stock-state",
-            route: "/dashboards/trading/stock-state",
-          },
-          {
-            name: "Institutions",
-            key: "trading-institutions",
-            route: "/dashboards/trading/institutions",
-          },
-          {
-            name: "Insider Buy/Sells",
-            key: "trading-insider-buysells",
-            route: "/dashboards/trading/insider-buysells",
-          },
-          {
-            name: "FDA Calendar",
-            key: "trading-fda-calendar",
-            route: "/dashboards/trading/fda-calendar",
-          },
-          {
-            name: "News",
-            key: "trading-news",
-            route: "/dashboards/trading/news",
-          },
-          {
-            name: "Option Contracts",
-            key: "trading-option-contracts",
-            route: "/dashboards/trading/option-contracts",
-          },
-          {
-            name: "Politician Portfolios",
-            key: "trading-politician-portfolios",
-            route: "/dashboards/trading/politician-portfolios",
-          },
-          {
-            name: "UW Screeners",
-            key: "trading-unusual-whales-screener",
-            route: "/dashboards/trading/unusual-whales-screener",
-          },
-          {
-            name: "Seasonality",
-            key: "trading-seasonality",
-            route: "/dashboards/trading/seasonality",
-          },
-          {
-            name: "Short Data",
-            key: "trading-short-data",
-            route: "/dashboards/trading/short-data",
-          },
-          {
-            name: "Ticker Analysis",
-            key: "trading-ticker-analysis",
-            route: "/dashboards/trading/ticker-analysis",
-          },
-          {
-            name: "Historique des Prix",
-            key: "trading-price-history",
-            route: "/dashboards/trading/price-history",
-          },
-          {
-            name: "13F Filings",
-            key: "trading-13f-filings",
-            route: "/dashboards/trading/13f-filings",
-          },
-        ],
-      },
-      {
-        name: "Crypto",
-        key: "crypto",
-        icon: <Icon fontSize="medium">trending_up</Icon>,
-        collapse: [
-          {
-            name: "Crypto Overview",
-            key: "crypto-overview",
-            route: "/dashboards/trading/crypto",
-          },
-          {
-            name: "Crypto Whales",
-            key: "trading-crypto-whales",
-            route: "/dashboards/trading/crypto-whales",
-          },
-          {
-            name: "Wallet Details",
-            key: "trading-wallet-details",
-            route: "/dashboards/trading/wallet-details",
-          },
-        ],
-      },
-    ],
+    { type: "divider", key: "divider-0" },
+    {
+      type: "collapse",
+      name: "Trading",
+      key: "trading",
+      icon: <Icon fontSize="medium">dashboard</Icon>,
+      collapse: [
+
+        {
+          name: "Vue d'ensemble",
+          key: "trading-overview",
+          route: "/dashboards/trading/overview",
+        },
+        {
+          name: "Earnings",
+          key: "trading-earnings",
+          route: "/dashboards/trading/earnings",
+        },
+        {
+          name: "Screener",
+          key: "trading-screener",
+          route: "/dashboards/trading/screener",
+        },
+        {
+          name: "Calendrier Économique",
+          key: "trading-economic",
+          route: "/dashboards/trading/economic",
+        },
+        {
+          name: "Alertes",
+          key: "trading-alerts",
+          route: "/dashboards/trading/alerts",
+        },
+        {
+          name: "Analyse Financière",
+          key: "trading-financial-analysis",
+          route: "/dashboards/trading/financial-analysis",
+        },
+        {
+          name: "Estimations Analystes",
+          key: "trading-analyst-estimates",
+          route: "/dashboards/trading/analyst-estimates",
+        },
+        {
+          name: "Valorisation DCF",
+          key: "trading-dcf-valuation",
+          route: "/dashboards/trading/dcf-valuation",
+        }
+
+      ],
     },
-  
+    {
+      type: "collapse",
+      name: "Unusual Whales",
+      key: "unusual-whales",
+      icon: <Icon fontSize="medium">Whale</Icon>,
+      collapse: [
 
- 
+        {
+          name: "Unusual Whales Overview",
+          key: "trading-unusual-whales-overview",
+          route: "/dashboards/trading/unusual-whales",
+        },
+        {
+          name: "Congress",
+          key: "trading-congress",
+          route: "/dashboards/trading/congress",
+        },
+        {
+          name: "Correlations",
+          key: "trading-correlations",
+          route: "/dashboards/trading/correlations",
+        },
+        {
+          name: "Greek Flow",
+          key: "trading-greek-flow",
+          route: "/dashboards/trading/greek-flow",
+        },
+        {
+          name: "Stock State",
+          key: "trading-stock-state",
+          route: "/dashboards/trading/stock-state",
+        },
+        {
+          name: "Institutions",
+          key: "trading-institutions",
+          route: "/dashboards/trading/institutions",
+        },
+        {
+          name: "Insider Buy/Sells",
+          key: "trading-insider-buysells",
+          route: "/dashboards/trading/insider-buysells",
+        },
+        {
+          name: "FDA Calendar",
+          key: "trading-fda-calendar",
+          route: "/dashboards/trading/fda-calendar",
+        },
+        {
+          name: "News",
+          key: "trading-news",
+          route: "/dashboards/trading/news",
+        },
+        {
+          name: "Option Contracts",
+          key: "trading-option-contracts",
+          route: "/dashboards/trading/option-contracts",
+        },
+        {
+          name: "Politician Portfolios",
+          key: "trading-politician-portfolios",
+          route: "/dashboards/trading/politician-portfolios",
+        },
+        {
+          name: "UW Screeners",
+          key: "trading-unusual-whales-screener",
+          route: "/dashboards/trading/unusual-whales-screener",
+        },
+        {
+          name: "Seasonality",
+          key: "trading-seasonality",
+          route: "/dashboards/trading/seasonality",
+        },
+        {
+          name: "Short Data",
+          key: "trading-short-data",
+          route: "/dashboards/trading/short-data",
+        },
+        {
+          name: "Ticker Analysis",
+          key: "trading-ticker-analysis",
+          route: "/dashboards/trading/ticker-analysis",
+        },
+        {
+          name: "Historique des Prix",
+          key: "trading-price-history",
+          route: "/dashboards/trading/price-history",
+        },
+        {
+          name: "13F Filings",
+          key: "trading-13f-filings",
+          route: "/dashboards/trading/13f-filings",
+        },
+      ],
+    },
+    {
+      type: "collapse",
+      name: "Crypto",
+      key: "crypto",
+      icon: <Icon fontSize="medium">currency_bitcoin</Icon>,
+      collapse: [
+
+        {
+          name: "Crypto Overview",
+          key: "crypto-overview",
+          route: "/dashboards/trading/crypto",
+        },
+        {
+          name: "Crypto Whales",
+          key: "trading-crypto-whales",
+          route: "/dashboards/trading/crypto-whales",
+        },
+        {
+          name: "Wallet Details",
+          key: "trading-wallet-details",
+          route: "/dashboards/trading/wallet-details",
+        },
 
 
-  { type: "divider", key: "divider-1" },
+      ],
+    },
 
- 
 
- 
 
-  
 
-  
+
+    { type: "divider", key: "divider-1" },
+
+
+
+
+
+
+
+
   ];
 
   return routes;
