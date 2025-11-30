@@ -280,7 +280,7 @@ function FundHoldings({ data = [], loading = false, fundName = "" }) {
                           </DataTableBodyCell>
                           <DataTableBodyCell align="left">
                             <MDTypography variant="caption" color="text.secondary">
-                              {formatDate(holding.filing_date)}
+                              {formatDate(holding.fund_filings.filing_date)}
                             </MDTypography>
                           </DataTableBodyCell>
                         </TableRow>

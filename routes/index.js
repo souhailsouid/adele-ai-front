@@ -162,6 +162,11 @@ function getRoutes(user = null) {
           route: "/dashboards/trading/insider-buysells",
         },
         {
+          name: "🐋 Whale Tracker",
+          key: "trading-whale-tracker",
+          route: "/dashboards/trading/whale-tracker",
+        },
+        {
           name: "FDA Calendar",
           key: "trading-fda-calendar",
           route: "/dashboards/trading/fda-calendar",
