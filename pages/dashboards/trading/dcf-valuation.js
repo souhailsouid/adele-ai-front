@@ -250,7 +250,7 @@ function TradingDCFValuation() {
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
             <Tabs value={currentTab} onChange={(e, newValue) => setCurrentTab(newValue)}>
               <Tab label="Analyse Unique" />
-              <Tab label="Screener Multi-Symboles" />
+              <Tab label="Sous-évaluées / Sur-évaluées" />
             </Tabs>
           </Box>
         </MDBox>
