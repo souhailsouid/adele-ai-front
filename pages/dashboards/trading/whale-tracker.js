@@ -25,7 +25,8 @@ import Alert from "@mui/material/Alert";
 
 // Services
 import unusualWhalesClient from "/lib/unusual-whales/client";
-import fmpClient from "/lib/fmp/client";
+import { fmpClient } from "/lib/fmp/client";
+import filings13FClient from "/lib/13f-filings/client";
 import metricsService from "/services/metricsService";
 import HEDGE_FUNDS from "/config/hedgeFunds";
 
@@ -33,8 +34,8 @@ function TradingWhaleTracker() {
   const [currentTab, setCurrentTab] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [autoRefresh, setAutoRefresh] = useState(true);
-  const [refreshInterval, setRefreshInterval] = useState(30); // secondes
+  const [autoRefresh, setAutoRefresh] = useState(false); // Désactivé par défaut pour éviter le rate limiting
+  const [refreshInterval, setRefreshInterval] = useState(60); // 60 secondes par défaut (plus conservateur)
 
   // États pour chaque type de données
   const [flowAlerts, setFlowAlerts] = useState([]);
@@ -145,61 +146,241 @@ function TradingWhaleTracker() {
     }
   }, []);
 
-  // Charger toutes les données
-  const loadAllData = useCallback(async () => {
+  // Charger l'activité des hedge funds depuis les APIs réelles
+  const loadHedgeFundActivity = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const [
-        alerts,
-        darkpool,
-        insiders,
-        congress,
-        institutional,
-        fmpInsiders,
-      ] = await Promise.all([
-        loadFlowAlerts(),
-        loadDarkpoolTrades(),
-        loadInsiderTrades(),
-        loadCongressTrades(),
-        loadInstitutionalActivity(),
-        loadFMPInsiderTrades(),
-      ]);
+      // Essayer d'abord l'API 13F Filings (plus fiable pour les hedge funds)
+      let hedgeFundsData = [];
+      try {
+        const funds = await filings13FClient.getFunds();
+        
+        // Filtrer les hedge funds de la liste
+        const hedgeFundNames = HEDGE_FUNDS.getAll().map(name => name.toLowerCase());
+        hedgeFundsData = (Array.isArray(funds) ? funds : []).filter(fund => {
+          const name = (fund.name || "").toLowerCase();
+          return hedgeFundNames.some(hfName => 
+            name.includes(hfName) || hfName.includes(name)
+          );
+        }).map(fund => ({
+          id: fund.id,
+          name: fund.name,
+          cik: fund.cik,
+          category: fund.category || "hedge_fund",
+          tier_influence: fund.tier_influence || 3,
+          source: "13f-filings",
+        }));
+      } catch (err) {
+        console.warn("13F Filings API not available, trying Unusual Whales:", err);
+      }
 
-      // Calculer les statistiques
-      const allAlerts = [...alerts, ...darkpool];
-      const totalPremium = allAlerts.reduce((sum, alert) => {
-        // Flow alerts utilisent total_premium, darkpool utilise premium
-        const premium = parseFloat(alert.total_premium || alert.premium || 0);
-        return sum + premium;
-      }, 0);
+      // Si pas de données 13F, utiliser Unusual Whales
+      if (hedgeFundsData.length === 0) {
+        try {
+          const allInstitutions = await unusualWhalesClient.getLatestInstitutionalFilings({
+            limit: 100, // Réduire pour éviter les limites
+          });
+          const institutions = Array.isArray(allInstitutions) 
+            ? allInstitutions 
+            : (allInstitutions?.data || []);
+          
+          const hedgeFundNames = HEDGE_FUNDS.getAll().map(name => name.toLowerCase());
+          
+          hedgeFundsData = institutions.filter(inst => {
+            const name = (inst.name || inst.short_name || "").toLowerCase();
+            return hedgeFundNames.some(hfName => 
+              name.includes(hfName) || hfName.includes(name)
+            );
+          }).map(inst => ({
+            id: inst.cik || inst.id,
+            name: inst.name || inst.short_name,
+            cik: inst.cik,
+            category: "hedge_fund",
+            source: "unusual-whales",
+          }));
+        } catch (err) {
+          console.error("Error loading from Unusual Whales:", err);
+        }
+      }
 
-      // Trouver le ticker le plus actif
-      const tickerCounts = {};
-      allAlerts.forEach((alert) => {
-        const ticker = alert.ticker || alert.ticker_symbol || "N/A";
-        tickerCounts[ticker] = (tickerCounts[ticker] || 0) + 1;
-      });
-      const topTicker = Object.entries(tickerCounts)
-        .sort(([, a], [, b]) => b - a)[0]?.[0] || null;
+      // Si toujours pas de données, utiliser la liste statique avec les données de base
+      if (hedgeFundsData.length === 0) {
+        hedgeFundsData = HEDGE_FUNDS.getTop20().map((fund, index) => ({
+          id: `static-${index}`,
+          name: fund.name,
+          headquarters: fund.headquarters,
+          aum: fund.aum,
+          rank: fund.rank,
+          source: "static",
+        }));
+      }
 
-      // Trouver le plus gros trade
-      const biggestTrade = allAlerts.reduce((max, alert) => {
-        const premium = parseFloat(alert.total_premium || alert.premium || 0);
-        const maxPremium = parseFloat(max?.total_premium || max?.premium || 0);
-        return premium > maxPremium ? alert : max;
-      }, null);
+      setHedgeFundActivity(hedgeFundsData);
+      return hedgeFundsData;
+    } catch (err) {
+      console.error("Error loading hedge fund activity:", err);
+      setError(err.message || "Erreur lors du chargement des hedge funds");
+      // Fallback sur la liste statique
+      const staticData = HEDGE_FUNDS.getTop20().map((fund, index) => ({
+        id: `static-${index}`,
+        name: fund.name,
+        headquarters: fund.headquarters,
+        aum: fund.aum,
+        rank: fund.rank,
+        source: "static",
+      }));
+      setHedgeFundActivity(staticData);
+      return staticData;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-      setStats({
-        totalAlerts: allAlerts.length,
-        totalPremium,
-        topTicker,
-        biggestTrade,
+  // Charger les holdings d'un hedge fund spécifique depuis les APIs réelles
+  const loadHedgeFundHoldings = useCallback(async (fundId, fundName) => {
+    if (!fundId && !fundName) return;
+    try {
+      setLoading(true);
+      
+      let holdingsData = [];
+      let activityData = [];
+      
+      // Essayer d'abord l'API 13F Filings (plus fiable)
+      if (fundId && !fundId.startsWith('static-')) {
+        try {
+          const holdings = await filings13FClient.getFundHoldings(fundId, 100);
+          holdingsData = Array.isArray(holdings) ? holdings : (holdings?.data || []);
+          
+          const filings = await filings13FClient.getFundFilings(fundId);
+          activityData = Array.isArray(filings) ? filings : (filings?.data || []);
+        } catch (err) {
+          console.warn("13F Filings API not available for holdings:", err);
+        }
+      }
+      
+      // Si pas de données 13F, utiliser Unusual Whales
+      if (holdingsData.length === 0 && fundName) {
+        try {
+          // Sérialiser les appels pour éviter la limite de 3 requêtes concurrentes
+          const activity = await unusualWhalesClient.getInstitutionActivity(fundName, { limit: 20 });
+          activityData = Array.isArray(activity) ? activity : (activity?.data || []);
+          
+          // Attendre un peu avant le deuxième appel
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          const holdings = await unusualWhalesClient.getInstitutionHoldings(fundName, { limit: 50 });
+          holdingsData = Array.isArray(holdings) ? holdings : (holdings?.data || []);
+        } catch (err) {
+          console.error(`Error loading holdings from Unusual Whales for ${fundName}:`, err);
+        }
+      }
+      
+      setHedgeFundHoldings({
+        activity: activityData,
+        holdings: holdingsData,
       });
     } catch (err) {
-      console.error("Error loading whale data:", err);
-      setError(err.message || "Erreur lors du chargement des données");
+      console.error(`Error loading holdings for ${fundName || fundId}:`, err);
+      setHedgeFundHoldings({ activity: [], holdings: [] });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Charger les données selon l'onglet actif (sérialisé pour éviter la limite de 3 requêtes concurrentes)
+  const loadTabData = useCallback(async (tabIndex) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Sérialiser les appels pour éviter la limite de 3 requêtes concurrentes
+      let alerts = [];
+      let darkpool = [];
+      let insiders = [];
+      let congress = [];
+      let institutional = [];
+      let fmpInsiders = [];
+
+      // Fonction helper pour ajouter un délai entre les appels
+      const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+      // Charger seulement les données nécessaires selon l'onglet
+      switch (tabIndex) {
+        case 0: // Flow Alerts
+          alerts = await loadFlowAlerts();
+          await delay(1000); // Délai de 1s entre les appels
+          darkpool = await loadDarkpoolTrades(); // Pour les stats
+          break;
+        case 1: // Dark Pool
+          darkpool = await loadDarkpoolTrades();
+          await delay(1000); // Délai de 1s entre les appels
+          alerts = await loadFlowAlerts(); // Pour les stats
+          break;
+        case 2: // Insiders (UW)
+          insiders = await loadInsiderTrades();
+          break;
+        case 3: // Insiders (FMP)
+          fmpInsiders = await loadFMPInsiderTrades();
+          break;
+        case 4: // Congress
+          congress = await loadCongressTrades();
+          break;
+        case 5: // Institutions
+          institutional = await loadInstitutionalActivity();
+          break;
+        case 6: // Hedge Funds
+          await loadHedgeFundActivity();
+          break;
+        default:
+          // Charger les données de base pour les stats (avec délai)
+          alerts = await loadFlowAlerts();
+          await delay(1000);
+          darkpool = await loadDarkpoolTrades();
+      }
+
+      // Calculer les statistiques seulement si on a des données
+      if (alerts.length > 0 || darkpool.length > 0) {
+        const allAlerts = [...alerts, ...darkpool];
+        const totalPremium = allAlerts.reduce((sum, alert) => {
+          const premium = parseFloat(alert.total_premium || alert.premium || 0);
+          return sum + premium;
+        }, 0);
+
+        const tickerCounts = {};
+        allAlerts.forEach((alert) => {
+          const ticker = alert.ticker || alert.ticker_symbol || "N/A";
+          tickerCounts[ticker] = (tickerCounts[ticker] || 0) + 1;
+        });
+        const topTicker = Object.entries(tickerCounts)
+          .sort(([, a], [, b]) => b - a)[0]?.[0] || null;
+
+        const biggestTrade = allAlerts.reduce((max, alert) => {
+          const premium = parseFloat(alert.total_premium || alert.premium || 0);
+          const maxPremium = parseFloat(max?.total_premium || max?.premium || 0);
+          return premium > maxPremium ? alert : max;
+        }, null);
+
+        setStats({
+          totalAlerts: allAlerts.length,
+          totalPremium,
+          topTicker,
+          biggestTrade,
+        });
+      }
+    } catch (err) {
+      console.error("Error loading tab data:", err);
+      
+      // Gestion spéciale pour les erreurs de rate limiting
+      if (err.status === 429) {
+        const resetTime = err.resetTime ? new Date(err.resetTime).toLocaleTimeString() : "quelques instants";
+        const message = `Limite de requêtes atteinte. Réessayez après ${resetTime}. L'auto-refresh a été désactivé.`;
+        setError(message);
+        setAutoRefresh(false); // Désactiver l'auto-refresh en cas de rate limit
+      } else {
+        setError(err.message || "Erreur lors du chargement des données");
+      }
     } finally {
       setLoading(false);
     }
@@ -210,34 +391,27 @@ function TradingWhaleTracker() {
     loadCongressTrades,
     loadInstitutionalActivity,
     loadFMPInsiderTrades,
+    loadHedgeFundActivity,
   ]);
 
-  // Charger les hedge funds quand on change d'onglet
+  // Charger les données quand on change d'onglet
   useEffect(() => {
-    if (currentTab === 6) {
-      loadHedgeFundActivity();
-    }
+    loadTabData(currentTab);
+    metricsService.trackFeatureUsage("whale-tracker");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTab]);
 
-  // Auto-refresh
+  // Auto-refresh seulement pour l'onglet actif
   useEffect(() => {
-    loadAllData();
-    metricsService.trackFeatureUsage("whale-tracker");
-
     if (autoRefresh) {
       const interval = setInterval(() => {
-        loadAllData();
-        // Recharger les hedge funds si on est sur l'onglet
-        if (currentTab === 6) {
-          loadHedgeFundActivity();
-        }
+        loadTabData(currentTab);
       }, refreshInterval * 1000);
 
       return () => clearInterval(interval);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadAllData, autoRefresh, refreshInterval, currentTab]);
+  }, [autoRefresh, refreshInterval, currentTab]);
 
   // Formater le montant
   const formatCurrency = (value) => {
@@ -481,7 +655,7 @@ function TradingWhaleTracker() {
                   variant="outlined"
                   color="info"
                   size="small"
-                  onClick={loadAllData}
+                  onClick={() => loadTabData(currentTab)}
                   disabled={loading}
                 >
                   <Icon>refresh</Icon>
@@ -1052,7 +1226,7 @@ function TradingWhaleTracker() {
                                 size="small"
                                 onClick={() => {
                                   setSelectedHedgeFund(row.original.name);
-                                  loadHedgeFundHoldings(row.original.name);
+                                  loadHedgeFundHoldings(row.original.id || `static-${row.index}`, row.original.name);
                                 }}
                               >
                                 <Icon>visibility</Icon>&nbsp;Holdings
@@ -1138,7 +1312,7 @@ function TradingWhaleTracker() {
                                   size="small"
                                   onClick={() => {
                                     setSelectedHedgeFund(row.original.name);
-                                    loadHedgeFundHoldings(row.original.name);
+                                    loadHedgeFundHoldings(row.original.id, row.original.name);
                                   }}
                                 >
                                   <Icon>visibility</Icon>&nbsp;Détails

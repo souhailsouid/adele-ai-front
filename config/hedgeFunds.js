@@ -183,6 +183,11 @@ export const HEDGE_FUNDS = {
     ];
   },
 
+  // Top 20 hedge funds
+  getTop20: function() {
+    return this.top20;
+  },
+
   // Liste avec catégories
   getByCategory: function() {
     return {
