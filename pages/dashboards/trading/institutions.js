@@ -58,6 +58,14 @@ function TradingInstitutions() {
   const [tickerInput, setTickerInput] = useState("");
   const [orderBy, setOrderBy] = useState("total_value");
   const [orderDirection, setOrderDirection] = useState("desc");
+  
+  // Filtres avancés pour Latest Filings
+  const [filterType, setFilterType] = useState("all"); // all, hedge_fund, other
+  const [filterDateFrom, setFilterDateFrom] = useState("");
+  const [filterDateTo, setFilterDateTo] = useState("");
+  const [filterTag, setFilterTag] = useState("");
+  const [sortBy, setSortBy] = useState("filing_date"); // filing_date, name, cik
+  const [sortDirection, setSortDirection] = useState("desc"); // asc, desc
 
 
   // Charger toutes les institutions pour l'Autocomplete (une seule fois au chargement)
@@ -122,7 +130,7 @@ function TradingInstitutions() {
     }
   };
 
-  // Charger les derniers filings
+  // Charger les derniers filings avec filtres
   const loadLatestFilings = async () => {
     try {
       setLoading(true);
@@ -147,7 +155,79 @@ function TradingInstitutions() {
         return [];
       };
 
-      setLatestFilings(extractData(data));
+      let filings = extractData(data);
+      
+      // Appliquer les filtres côté client
+      if (filterType !== "all") {
+        filings = filings.filter(filing => {
+          if (filterType === "hedge_fund") {
+            return filing.is_hedge_fund === true;
+          } else if (filterType === "other") {
+            return filing.is_hedge_fund !== true;
+          }
+          return true;
+        });
+      }
+      
+      // Filtrer par date
+      if (filterDateFrom) {
+        filings = filings.filter(filing => {
+          const filingDate = new Date(filing.filing_date);
+          const fromDate = new Date(filterDateFrom);
+          return filingDate >= fromDate;
+        });
+      }
+      
+      if (filterDateTo) {
+        filings = filings.filter(filing => {
+          const filingDate = new Date(filing.filing_date);
+          const toDate = new Date(filterDateTo);
+          toDate.setHours(23, 59, 59, 999); // Fin de journée
+          return filingDate <= toDate;
+        });
+      }
+      
+      // Filtrer par tag
+      if (filterTag.trim()) {
+        const tagLower = filterTag.toLowerCase().trim();
+        filings = filings.filter(filing => {
+          if (!filing.tags || !Array.isArray(filing.tags)) return false;
+          return filing.tags.some(tag => tag.toLowerCase().includes(tagLower));
+        });
+      }
+      
+      // Trier
+      filings.sort((a, b) => {
+        let aValue, bValue;
+        
+        switch (sortBy) {
+          case "filing_date":
+            aValue = new Date(a.filing_date || 0);
+            bValue = new Date(b.filing_date || 0);
+            break;
+          case "name":
+            aValue = (a.name || a.short_name || "").toLowerCase();
+            bValue = (b.name || b.short_name || "").toLowerCase();
+            break;
+          case "cik":
+            aValue = a.cik || "";
+            bValue = b.cik || "";
+            break;
+          default:
+            aValue = new Date(a.filing_date || 0);
+            bValue = new Date(b.filing_date || 0);
+        }
+        
+        if (sortBy === "filing_date") {
+          return sortDirection === "desc" ? bValue - aValue : aValue - bValue;
+        } else {
+          if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
+          if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+          return 0;
+        }
+      });
+
+      setLatestFilings(filings);
     } catch (err) {
       console.error("Error loading Latest Filings:", err);
       setError(err.message || "Erreur lors du chargement des derniers filings");
@@ -326,7 +406,7 @@ function TradingInstitutions() {
       // Ne charge pas automatiquement, nécessite une institution
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [internalTab, orderBy, orderDirection]);
+  }, [internalTab, orderBy, orderDirection, filterType, filterDateFrom, filterDateTo, filterTag, sortBy, sortDirection]);
 
   const handleInternalTabChange = (event, newValue) => {
     setInternalTab(newValue);
@@ -453,7 +533,7 @@ function TradingInstitutions() {
                     />
                   </Grid>
                 )}
-                {(internalTab === "list" || internalTab === "filings") && (
+                {internalTab === "list" && (
                   <>
                     <Grid item xs={12} md={3}>
                       <FormControl variant="standard" fullWidth>
@@ -478,7 +558,96 @@ function TradingInstitutions() {
                     </Grid>
                   </>
                 )}
-                <Grid item xs={12} md={internalTab === "ownership" ? 8 : internalTab === "list" || internalTab === "filings" ? 3 : 8}>
+                
+                {/* Filtres avancés pour Latest Filings */}
+                {internalTab === "filings" && (
+                  <>
+                    <Grid item xs={12} md={2}>
+                      <FormControl variant="standard" fullWidth>
+                        <InputLabel>Type</InputLabel>
+                        <Select value={filterType} onChange={(e) => setFilterType(e.target.value)} label="Type">
+                          <MenuItem value="all">Tous</MenuItem>
+                          <MenuItem value="hedge_fund">Hedge Fund</MenuItem>
+                          <MenuItem value="other">Autres</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={12} md={2}>
+                      <MDInput
+                        type="date"
+                        label="Date de début"
+                        value={filterDateFrom}
+                        onChange={(e) => setFilterDateFrom(e.target.value)}
+                        variant="standard"
+                        fullWidth
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={2}>
+                      <MDInput
+                        type="date"
+                        label="Date de fin"
+                        value={filterDateTo}
+                        onChange={(e) => setFilterDateTo(e.target.value)}
+                        variant="standard"
+                        fullWidth
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={2}>
+                      <MDInput
+                        label="Tag"
+                        placeholder="Ex: Technology"
+                        value={filterTag}
+                        onChange={(e) => setFilterTag(e.target.value)}
+                        variant="standard"
+                        fullWidth
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={2}>
+                      <FormControl variant="standard" fullWidth>
+                        <InputLabel>Tri par</InputLabel>
+                        <Select value={sortBy} onChange={(e) => setSortBy(e.target.value)} label="Tri par">
+                          <MenuItem value="filing_date">Date de Filing</MenuItem>
+                          <MenuItem value="name">Nom</MenuItem>
+                          <MenuItem value="cik">CIK</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={12} md={2}>
+                      <FormControl variant="standard" fullWidth>
+                        <InputLabel>Direction</InputLabel>
+                        <Select value={sortDirection} onChange={(e) => setSortDirection(e.target.value)} label="Direction">
+                          <MenuItem value="asc">Croissant</MenuItem>
+                          <MenuItem value="desc">Décroissant</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                  </>
+                )}
+                
+                {internalTab === "filings" && (
+                  <Grid item xs={12} md={2}>
+                    <MDButton 
+                      variant="outlined" 
+                      color="secondary" 
+                      onClick={() => {
+                        setFilterType("all");
+                        setFilterDateFrom("");
+                        setFilterDateTo("");
+                        setFilterTag("");
+                        setSortBy("filing_date");
+                        setSortDirection("desc");
+                        setTimeout(() => loadLatestFilings(), 100);
+                      }} 
+                      disabled={loading} 
+                      fullWidth
+                    >
+                      Réinitialiser
+                    </MDButton>
+                  </Grid>
+                )}
+                <Grid item xs={12} md={internalTab === "ownership" ? 8 : internalTab === "list" ? 3 : internalTab === "filings" ? 2 : 8}>
                   <MDButton variant="gradient" color="dark" onClick={handleSearch} disabled={loading} fullWidth>
                     Rechercher
                   </MDButton>
@@ -507,6 +676,27 @@ function TradingInstitutions() {
             )}
             {internalTab === "filings" && (
               <Grid item xs={12}>
+                <MDBox mb={2}>
+                  <Card>
+                    <MDBox p={2}>
+                      <Grid container spacing={2} alignItems="center">
+                        <Grid item xs={12} md={6}>
+                          <MDTypography variant="h6" fontWeight="medium">
+                            Résultats: {latestFilings.length} filing(s)
+                          </MDTypography>
+                          {(filterType !== "all" || filterDateFrom || filterDateTo || filterTag) && (
+                            <MDTypography variant="caption" color="text.secondary">
+                              Filtres actifs: {filterType !== "all" && `Type: ${filterType === "hedge_fund" ? "Hedge Fund" : "Autres"}`}
+                              {filterDateFrom && ` | Du: ${new Date(filterDateFrom).toLocaleDateString("fr-FR")}`}
+                              {filterDateTo && ` | Au: ${new Date(filterDateTo).toLocaleDateString("fr-FR")}`}
+                              {filterTag && ` | Tag: ${filterTag}`}
+                            </MDTypography>
+                          )}
+                        </Grid>
+                      </Grid>
+                    </MDBox>
+                  </Card>
+                </MDBox>
                 <LatestFilings data={latestFilings} loading={loading} />
               </Grid>
             )}
