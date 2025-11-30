@@ -60,7 +60,15 @@ function TradingDCFValuation() {
       ]);
       
       if (dcfData.status === "fulfilled") {
-        setDCF(dcfData.value);
+        // L'API retourne un tableau, prendre le premier élément
+        const dcfValue = dcfData.value;
+        if (Array.isArray(dcfValue) && dcfValue.length > 0) {
+          setDCF(dcfValue[0]);
+        } else if (dcfValue && typeof dcfValue === 'object') {
+          setDCF(dcfValue);
+        } else {
+          setDCF(null);
+        }
       }
       if (quoteData.status === "fulfilled") {
         setQuote(quoteData.value);
@@ -78,14 +86,15 @@ function TradingDCFValuation() {
     loadDCF();
     metricsService.trackFeatureUsage("dcf-valuation");
   }, [loadDCF]);
-
   // Calculer l'écart et le pourcentage
-  const valuation = dcf && quote ? {
+  // dcf peut être un objet ou un tableau (on prend le premier élément si c'est un tableau)
+  const dcfObj = Array.isArray(dcf) ? dcf[0] : dcf;
+  const valuation = dcfObj && quote ? {
     currentPrice: quote.price || 0,
-    dcfPrice: dcf.dcf || dcf.stockPrice || 0,
-    difference: (dcf.dcf || dcf.stockPrice || 0) - (quote.price || 0),
-    percentage: ((dcf.dcf || dcf.stockPrice || 0) - (quote.price || 0)) / (quote.price || 1) * 100,
-    isUndervalued: (dcf.dcf || dcf.stockPrice || 0) > (quote.price || 0),
+    dcfPrice: dcfObj.dcf || dcfObj['Stock Price'] || 0,
+    difference: (dcfObj.dcf || dcfObj['Stock Price'] || 0) - (quote.price || 0),
+    percentage: ((dcfObj.dcf || dcfObj['Stock Price'] || 0) - (quote.price || 0)) / (quote.price || 1) * 100,
+    isUndervalued: (dcfObj.dcf || dcfObj['Stock Price'] || 0) > (quote.price || 0),
   } : null;
 
   return (
@@ -215,7 +224,7 @@ function TradingDCFValuation() {
           <MDBox p={3}>
             <LinearProgress />
           </MDBox>
-        ) : dcf ? (
+        ) : dcfObj ? (
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
               <Card>
@@ -262,7 +271,7 @@ function TradingDCFValuation() {
                             : "L'action est sur-évaluée selon le modèle DCF. Risque de correction."}
                         </MDTypography>
                       </MDBox>
-                    </MDBox>
+                    </MDBox> 
                   )}
                 </MDBox>
               </Card>
@@ -273,23 +282,38 @@ function TradingDCFValuation() {
                   <MDTypography variant="h6" fontWeight="medium" mb={2}>
                     Détails DCF
                   </MDTypography>
-                  {dcf && typeof dcf === "object" ? (
+                  {dcfObj ? (
                     <DataTable
-                      table={{
-                        columns: [
-                          { Header: "Paramètre", accessor: "key", width: "50%" },
-                          { Header: "Valeur", accessor: "value", width: "50%" },
-                        ],
-                        rows: Object.keys(dcf)
-                          .filter((k) => !["dcf", "stockPrice"].includes(k))
-                          .map((key) => ({
-                            key: key.replace(/([A-Z])/g, " $1").trim(),
-                            value:
-                              typeof dcf[key] === "number"
-                                ? dcf[key].toFixed(2)
-                                : dcf[key] || "N/A",
-                          })),
-                      }}
+                        table={{
+                          columns: [
+                            { Header: "Paramètre", accessor: "key", width: "50%" },
+                            { Header: "Valeur", accessor: "value", width: "50%" },
+                          ],
+                          rows: Object.keys(dcfObj)
+                            .filter((k) => !["dcf", "Stock Price"].includes(k))
+                            .map((key) => {
+                              const value = dcfObj[key];
+                              // Gérer les différents types de valeurs
+                              let displayValue = "N/A";
+                              if (value === null || value === undefined) {
+                                displayValue = "N/A";
+                              } else if (typeof value === 'number') {
+                                displayValue = value.toFixed(2);
+                              } else if (typeof value === 'string') {
+                                displayValue = value;
+                              } else if (typeof value === 'boolean') {
+                                displayValue = value ? 'Oui' : 'Non';
+                              } else if (typeof value === 'object') {
+                                displayValue = JSON.stringify(value);
+                              }
+                              
+                              return {
+                                key: key.replace(/([A-Z])/g, " $1").trim(),
+                                value: displayValue
+                              };
+                            })
+                        }}
+                      
                       canSearch={false}
                       entriesPerPage={false}
                       showTotalEntries={false}
