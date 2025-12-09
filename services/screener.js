@@ -2,7 +2,7 @@
  * Service de screening intelligent pour détecter des opportunités de trading
  */
 
-import fmpClient from "/lib/fmp/client";
+import fmpUWClient from "/lib/api/fmpUnusualWhalesClient";
 import { getWatchlistSymbols } from "/config/watchlist";
 
 export class SmartScreener {
@@ -63,7 +63,7 @@ export class SmartScreener {
       const to = futureDate.toISOString().split("T")[0];
 
       // Récupérer le calendrier earnings
-      const earnings = await fmpClient.getEarningsCalendar(from, to);
+      const earnings = await fmpUWClient.getFMPEarningsCalendar(from, to);
       
       if (!earnings || earnings.length === 0) {
         return [];
@@ -90,12 +90,12 @@ export class SmartScreener {
         try {
           const symbol = earning.symbol;
           // Faire les appels séquentiellement avec un petit délai
-          const quote = await fmpClient.getQuote(symbol).catch(() => null);
+          const quote = await fmpUWClient.getFMPQuote(symbol).catch(() => null);
           if (!quote) continue;
           
           const [rsi, history] = await Promise.all([
-            fmpClient.getRSI(symbol, 14, "1day").catch(() => null),
-            fmpClient.getHistoricalData(symbol, "1month").catch(() => []),
+            fmpUWClient.getFMPRSI(symbol, 14, "1day").catch(() => null),
+            fmpUWClient.getFMPHistoricalPrice(symbol, "1month").catch(() => []),
           ]);
 
           console.log(`screener.js:203 avgVolume calculation for ${symbol}`, {

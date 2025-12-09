@@ -2,7 +2,7 @@
  * Service pour le calendrier économique
  */
 
-import fmpClient from "/lib/fmp/client";
+import fmpUWClient from "/lib/api/fmpUnusualWhalesClient";
 
 export class EconomicCalendarService {
   /**
@@ -17,12 +17,13 @@ export class EconomicCalendarService {
   static MAJOR_COUNTRIES = ["US", "CN", "JP"];
 
   /**
-   * Récupérer les événements économiques
+   * Récupérer les événements économiques (format combiné FMP + UW)
    * @param {number} daysAhead - Nombre de jours à venir (défaut: 7) - utilisé si from/to non fournis
    * @param {string} impact - Filtrer par impact: "High", "Medium", "Low" (optionnel)
    * @param {string[]} countries - Filtrer par pays (optionnel)
    * @param {string} from - Date de début (YYYY-MM-DD) (optionnel, prioritaire sur daysAhead)
    * @param {string} to - Date de fin (YYYY-MM-DD) (optionnel, prioritaire sur daysAhead)
+   * @returns {Promise<Array>} Tableau d'événements normalisés
    */
   async getEconomicEvents(daysAhead = 7, impact = null, countries = null, from = null, to = null) {
     try {
@@ -40,22 +41,121 @@ export class EconomicCalendarService {
         toDate = futureDate.toISOString().split("T")[0];
       }
 
-      let events = await fmpClient.getEconomicCalendar(fromDate, toDate);
+      console.log(`[EconomicCalendarService] Fetching events from ${fromDate} to ${toDate}`);
+      let response = await fmpUWClient.getFMPEconomicCalendar(fromDate, toDate);
+      
+      console.log(`[EconomicCalendarService] Raw response type:`, typeof response);
+      console.log(`[EconomicCalendarService] Raw response:`, response);
+      
+      // Gérer la nouvelle structure de réponse combinée (FMP + UW)
+      let events = [];
+      if (Array.isArray(response)) {
+        // Réponse directe en tableau (format FMP direct)
+        console.log(`[EconomicCalendarService] Response is array with ${response.length} events`);
+        events = response.map((event) => {
+          // Normaliser les événements FMP directs
+          return {
+            date: event.date || '',
+            event: event.event || 'N/A',
+            country: event.country || 'N/A',
+            impact: event.impact || 'N/A',
+            time: event.date ? event.date.split(' ')[1] || null : null, // Extraire l'heure de la date
+            currency: event.currency || null,
+            previous: event.previous !== undefined && event.previous !== null ? Number(event.previous) : null,
+            estimate: event.estimate !== undefined && event.estimate !== null ? Number(event.estimate) : null,
+            actual: event.actual !== undefined && event.actual !== null ? Number(event.actual) : null,
+            change: event.change !== undefined && event.change !== null ? Number(event.change) : null,
+            changePercentage: event.changePercentage !== undefined && event.changePercentage !== null ? Number(event.changePercentage) : null,
+            unit: event.unit || null,
+            source: 'FMP',
+          };
+        });
+      } else if (response && typeof response === 'object') {
+        // Nouveau format combiné: { success: true, data: [...], count: 50, sources: {...} }
+        if (response.success && response.data && Array.isArray(response.data)) {
+          console.log(`[EconomicCalendarService] Response has data array with ${response.data.length} events`);
+          // Normaliser les événements combinés
+          events = response.data.map((event) => {
+            // Priorité aux données combinées, sinon utiliser FMP, sinon UW
+            const fmpData = event.fmp || {};
+            const uwData = event.uw || {};
+            
+            return {
+              // Champs principaux (priorité aux valeurs combinées)
+              date: event.date || fmpData.date || uwData.date || '',
+              event: event.event || fmpData.event || uwData.description || uwData.event || 'N/A',
+              country: event.country || fmpData.country || uwData.country || 'N/A',
+              impact: event.impact || fmpData.impact || uwData.impact || 'N/A',
+              time: event.time || fmpData.time || uwData.time || null,
+              currency: event.currency || fmpData.currency || null,
+              
+              // Valeurs numériques (priorité aux valeurs combinées)
+              previous: event.previous !== undefined && event.previous !== null 
+                ? Number(event.previous) 
+                : (fmpData.previous !== undefined && fmpData.previous !== null ? Number(fmpData.previous) : null),
+              estimate: event.estimate !== undefined && event.estimate !== null 
+                ? Number(event.estimate) 
+                : (fmpData.estimate !== undefined && fmpData.estimate !== null ? Number(fmpData.estimate) : null),
+              actual: event.actual !== undefined && event.actual !== null 
+                ? Number(event.actual) 
+                : (fmpData.actual !== undefined && fmpData.actual !== null ? Number(fmpData.actual) : null),
+              change: event.change !== undefined && event.change !== null 
+                ? Number(event.change) 
+                : (fmpData.change !== undefined && fmpData.change !== null ? Number(fmpData.change) : null),
+              changePercentage: event.changePercentage !== undefined && event.changePercentage !== null 
+                ? Number(event.changePercentage) 
+                : (fmpData.changePercentage !== undefined && fmpData.changePercentage !== null ? Number(fmpData.changePercentage) : null),
+              
+              // Métadonnées
+              source: event.source || 'FMP', // BOTH, FMP, ou UW
+              unit: event.unit || fmpData.unit || null,
+              
+              // Données brutes pour référence
+              _fmp: fmpData,
+              _uw: uwData,
+            };
+          });
+        } else if (response.data && Array.isArray(response.data)) {
+          // Format avec data mais sans success
+          events = response.data;
+        } else if (response.events && Array.isArray(response.events)) {
+          events = response.events;
+        } else {
+          console.warn("Unexpected response format from economic calendar API:", response);
+          return [];
+        }
+      } else {
+        console.warn("Invalid response from economic calendar API:", response);
+        return [];
+      }
 
+      // S'assurer que tous les événements ont les champs requis
+      events = events.filter((e) => {
+        return e && typeof e === 'object' && (e.date || e.event);
+      });
+
+      console.log(`[EconomicCalendarService] Before filtering: ${events.length} events`);
+      
       // Filtrer par impact si spécifié
       if (impact) {
+        const beforeImpactFilter = events.length;
         events = events.filter((e) => e.impact === impact);
+        console.log(`[EconomicCalendarService] After impact filter (${impact}): ${events.length} events (was ${beforeImpactFilter})`);
       }
 
       // Filtrer par pays si spécifié
       if (countries && countries.length > 0) {
-        events = events.filter((e) => countries.includes(e.country));
+        const beforeCountryFilter = events.length;
+        events = events.filter((e) => e.country && countries.includes(e.country));
+        console.log(`[EconomicCalendarService] After country filter (${countries.join(', ')}): ${events.length} events (was ${beforeCountryFilter})`);
       }
+      
+      console.log(`[EconomicCalendarService] Final events count: ${events.length}`);
 
       // Trier par date (plus proche en premier)
       events.sort((a, b) => {
-        const dateA = new Date(a.date);
-        const dateB = new Date(b.date);
+        const dateA = new Date(a.date || 0);
+        const dateB = new Date(b.date || 0);
         return dateA - dateB;
       });
 

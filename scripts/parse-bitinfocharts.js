@@ -142,3 +142,7 @@ console.log('2. Ajoutez dans config/cryptoWhales.js');
 console.log('3. Ou utilisez: addWhaleFromBitInfo("Nom", "adresse", "Type", "balance")');
 
 
+
+
+
+

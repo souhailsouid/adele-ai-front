@@ -28,7 +28,8 @@ import MiniStatisticsCard from "/examples/Cards/StatisticsCards/MiniStatisticsCa
 
 // Services
 import financialAnalysisService from "/services/financialAnalysisService";
-import fmpClient from "/lib/fmp/client";
+import fmpUWClient from "/lib/api/fmpUnusualWhalesClient";
+import withAuth from "/hocs/withAuth";
 import metricsService from "/services/metricsService";
 import { getWatchlistSymbols } from "/config/watchlist";
 
@@ -68,7 +69,7 @@ function TradingFinancialAnalysis() {
     }
 
     try {
-      const results = await fmpClient.searchCompanyByName(query);
+      const results = await fmpUWClient.searchCompanyByName(query);
       setSearchResults(results.slice(0, 10));
     } catch (err) {
       console.error("Error searching companies:", err);
@@ -95,11 +96,11 @@ function TradingFinancialAnalysis() {
         analystEstimatesData,
       ] = await Promise.allSettled([
         financialAnalysisService.analyzeFinancialStatements(symbolUpper, period, 5),
-        fmpClient.getBalanceSheet(symbolUpper, period, 5),
-        fmpClient.getCashFlowStatement(symbolUpper, period, 5),
-        fmpClient.getKeyMetrics(symbolUpper, period, 5),
-        fmpClient.getDCF(symbolUpper),
-        fmpClient.getAnalystEstimates(symbolUpper, period, 0, 10),
+        fmpUWClient.getFMPBalanceSheet(symbolUpper, period, 5),
+        fmpUWClient.getFMPCashFlow(symbolUpper, period, 5),
+        fmpUWClient.getFMPKeyMetrics(symbolUpper, period, 5),
+        fmpUWClient.getFMPDCF(symbolUpper),
+        fmpUWClient.getFMPAnalystEstimates(symbolUpper, period, 10),
       ]);
    console.log('nalystEstimatesData', analystEstimatesData);  
       if (financialResult.status === "fulfilled") {
@@ -756,5 +757,5 @@ console.log('analystEstimates', analystEstimates);
   );
 }
 
-export default TradingFinancialAnalysis;
+export default withAuth(TradingFinancialAnalysis);
 

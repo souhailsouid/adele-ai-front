@@ -3,7 +3,7 @@
  * et calculer les ratios financiers (P/E, etc.)
  */
 
-import fmpClient from "/lib/fmp/client";
+import fmpUWClient from "/lib/api/fmpUnusualWhalesClient";
 
 export class FinancialAnalysisService {
   /**
@@ -15,10 +15,10 @@ export class FinancialAnalysisService {
   async analyzeFinancialStatements(symbol, period = "annual", limit = 5) {
     try {
       const [incomeStatements, quote, profile, ratios] = await Promise.all([
-        fmpClient.getIncomeStatement(symbol, period, limit).catch(() => []),
-        fmpClient.getQuote(symbol).catch(() => null),
-        fmpClient.getCompanyProfile(symbol).catch(() => null),
-        fmpClient.getRatios(symbol, period).catch(() => []),
+        fmpUWClient.getFMPIncomeStatement(symbol, period, limit).catch(() => []),
+        fmpUWClient.getFMPQuote(symbol).catch(() => null),
+        fmpUWClient.getFMPCompanyProfile(symbol).catch(() => null),
+        fmpUWClient.getFMPRatios(symbol, period, limit).catch(() => []),
       ]);
 
       if (!incomeStatements || incomeStatements.length === 0) {

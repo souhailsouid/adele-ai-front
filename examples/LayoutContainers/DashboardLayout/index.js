@@ -28,7 +28,6 @@ import { useMaterialUIController, setLayout } from "/context";
 
 function DashboardLayout({ children }) {
   const [controller, dispatch] = useMaterialUIController();
-  const { miniSidenav } = controller;
   const { pathname } = useRouter();
 
   useEffect(() => {
@@ -37,19 +36,12 @@ function DashboardLayout({ children }) {
 
   return (
     <MDBox
-      sx={({ breakpoints, transitions, functions: { pxToRem } }) => ({
+      sx={({ breakpoints, transitions }) => ({
         p: 3,
         position: "relative",
         minHeight: "100vh",
         paddingBottom: 8,
-
-        [breakpoints.up("xl")]: {
-          marginLeft: miniSidenav ? pxToRem(120) : pxToRem(274),
-          transition: transitions.create(["margin-left", "margin-right"], {
-            easing: transitions.easing.easeInOut,
-            duration: transitions.duration.standard,
-          }),
-        },
+        // Pas de marginLeft car la sidenav est désactivée
       })}
     >
       {children}

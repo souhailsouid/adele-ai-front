@@ -18,7 +18,7 @@ import MDInput from "/components/MDInput";
 import MDDatePicker from "/components/MDDatePicker";
 
 function EconomicCalendarFilters({ onFilterChange, initialFilters = {}, onSearchChange, onSortChange }) {
-  const [period, setPeriod] = useState(initialFilters.period || "thisMonth");
+  const [period, setPeriod] = useState(initialFilters.period || "next30Days");
   const [impact, setImpact] = useState(initialFilters.impact || "all");
   const [country, setCountry] = useState(initialFilters.country || "all");
   const [customFrom, setCustomFrom] = useState(initialFilters.customFrom || "");
@@ -27,16 +27,28 @@ function EconomicCalendarFilters({ onFilterChange, initialFilters = {}, onSearch
   const [specificDate, setSpecificDate] = useState(initialFilters.specificDate || "");
   const [sortOrder, setSortOrder] = useState(initialFilters.sortOrder || "asc"); // "asc" ou "desc"
 
-  // Calculer les dates selon la période sélectionnée
+  // Calculer les dates selon la période sélectionnée (toujours dynamique à partir de la date du jour)
   const getPeriodDates = useCallback((periodValue) => {
+    // Toujours utiliser la date du jour actuelle (dynamique)
     const today = new Date();
+    // S'assurer que l'heure est à minuit pour éviter les problèmes de fuseau horaire
+    today.setHours(0, 0, 0, 0);
+    
     let from, to;
     
     switch (periodValue) {
+      case "today":
+        // Aujourd'hui uniquement
+        from = today.toISOString().split("T")[0];
+        to = today.toISOString().split("T")[0];
+        break;
       case "thisWeek":
         // Cette semaine (lundi à dimanche)
         const monday = new Date(today);
-        monday.setDate(today.getDate() - today.getDay() + 1);
+        const dayOfWeek = today.getDay(); // 0 = dimanche, 1 = lundi, etc.
+        const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        monday.setDate(today.getDate() + daysToMonday);
+        monday.setHours(0, 0, 0, 0);
         from = monday.toISOString().split("T")[0];
         const sunday = new Date(monday);
         sunday.setDate(monday.getDate() + 6);
@@ -45,14 +57,17 @@ function EconomicCalendarFilters({ onFilterChange, initialFilters = {}, onSearch
       case "nextWeek":
         // Semaine prochaine
         const nextMonday = new Date(today);
-        nextMonday.setDate(today.getDate() - today.getDay() + 8);
+        const nextDayOfWeek = today.getDay();
+        const nextDaysToMonday = nextDayOfWeek === 0 ? 1 : 8 - nextDayOfWeek;
+        nextMonday.setDate(today.getDate() + nextDaysToMonday);
+        nextMonday.setHours(0, 0, 0, 0);
         from = nextMonday.toISOString().split("T")[0];
         const nextSunday = new Date(nextMonday);
         nextSunday.setDate(nextMonday.getDate() + 6);
         to = nextSunday.toISOString().split("T")[0];
         break;
       case "thisMonth":
-        // Ce mois
+        // Mois en cours (du 1er au dernier jour du mois)
         from = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split("T")[0];
         to = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split("T")[0];
         break;
@@ -62,24 +77,33 @@ function EconomicCalendarFilters({ onFilterChange, initialFilters = {}, onSearch
         to = new Date(today.getFullYear(), today.getMonth() + 2, 0).toISOString().split("T")[0];
         break;
       case "thisQuarter":
-        // Ce trimestre
+        // Trimestre en cours
         const quarter = Math.floor(today.getMonth() / 3);
         from = new Date(today.getFullYear(), quarter * 3, 1).toISOString().split("T")[0];
         to = new Date(today.getFullYear(), (quarter + 1) * 3, 0).toISOString().split("T")[0];
         break;
       case "next30Days":
-        // 30 prochains jours
+        // 30 prochains jours à partir d'aujourd'hui
         from = today.toISOString().split("T")[0];
         const future30 = new Date(today);
         future30.setDate(today.getDate() + 30);
         to = future30.toISOString().split("T")[0];
         break;
+      case "next90Days":
+        // 90 prochains jours à partir d'aujourd'hui
+        from = today.toISOString().split("T")[0];
+        const future90 = new Date(today);
+        future90.setDate(today.getDate() + 90);
+        to = future90.toISOString().split("T")[0];
+        break;
       case "custom":
         return { from: customFrom, to: customTo };
       default:
-        // Ce mois par défaut
-        from = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split("T")[0];
-        to = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split("T")[0];
+        // Par défaut : 30 prochains jours à partir d'aujourd'hui
+        from = today.toISOString().split("T")[0];
+        const defaultFuture = new Date(today);
+        defaultFuture.setDate(today.getDate() + 30);
+        to = defaultFuture.toISOString().split("T")[0];
     }
     
     return { from, to };
@@ -272,7 +296,10 @@ function EconomicCalendarFilters({ onFilterChange, initialFilters = {}, onSearch
               label="Période"
               onChange={handlePeriodChange}
             >
+              <MenuItem value="today">Aujourd&apos;hui</MenuItem>
               <MenuItem value="thisWeek">Cette semaine</MenuItem>
+              <MenuItem value="next30Days">30 prochains jours</MenuItem>
+              <MenuItem value="next90Days">90 prochains jours</MenuItem>
               <MenuItem value="nextWeek">Semaine prochaine</MenuItem>
               <MenuItem value="thisMonth">Ce mois</MenuItem>
               <MenuItem value="nextMonth">Mois prochain</MenuItem>

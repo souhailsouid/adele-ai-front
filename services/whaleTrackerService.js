@@ -3,8 +3,7 @@
  * Centralise tous les appels API et la logique de chargement des données
  */
 
-import unusualWhalesClient from "/lib/unusual-whales/client";
-import { fmpClient } from "/lib/fmp/client";
+import fmpUWClient from "/lib/api/fmpUnusualWhalesClient";
 import filings13FClient from "/lib/13f-filings/client";
 import HEDGE_FUNDS from "/config/hedgeFunds";
 
@@ -12,7 +11,7 @@ class WhaleTrackerService {
   // Flow Alerts
   async loadFlowAlerts(options = {}) {
     try {
-      const data = await unusualWhalesClient.getFlowAlerts({
+      const data = await fmpUWClient.getUWFlowAlerts(null, {
         limit: options.limit || 50,
         min_premium: options.min_premium || 100000,
       });
@@ -26,7 +25,7 @@ class WhaleTrackerService {
   // Dark Pool Trades
   async loadDarkpoolTrades(options = {}) {
     try {
-      const data = await unusualWhalesClient.getRecentDarkpoolTrades({
+      const data = await fmpUWClient.getUWDarkPoolTrades(null, {
         limit: options.limit || 50,
         min_premium: options.min_premium || 500000,
       });
@@ -40,7 +39,7 @@ class WhaleTrackerService {
   // Insider Trades (Unusual Whales)
   async loadInsiderTrades(options = {}) {
     try {
-      const data = await unusualWhalesClient.getInsiderTransactions({
+      const data = await fmpUWClient.getUWInsiderTransactions(null, {
         limit: options.limit || 50,
       });
       const trades = Array.isArray(data) ? data : (data?.data || []);
@@ -55,7 +54,7 @@ class WhaleTrackerService {
   // Insider Trades (FMP)
   async loadFMPInsiderTrades(options = {}) {
     try {
-      const data = await fmpClient.getInsiderTrades(options.symbol, {
+      const data = await fmpUWClient.getFMPInsiderTrades(options.symbol, {
         limit: Math.min(options.limit || 50, 100), // Cap à 100 pour Starter plan
       });
       return Array.isArray(data) ? data : (data?.data || []);
@@ -68,7 +67,7 @@ class WhaleTrackerService {
   // Congress Trades
   async loadCongressTrades(options = {}) {
     try {
-      const data = await unusualWhalesClient.getCongressRecentTrades({
+      const data = await fmpUWClient.getUWCongressRecentTrades(null, {
         limit: options.limit || 50,
       });
       const trades = Array.isArray(data) ? data : (data?.data || []);
@@ -83,7 +82,7 @@ class WhaleTrackerService {
   // Institutional Activity
   async loadInstitutionalActivity(options = {}) {
     try {
-      const data = await unusualWhalesClient.getLatestInstitutionalFilings({
+      const data = await fmpUWClient.getUWLatestInstitutionalFilings({
         limit: options.limit || 100,
       });
       return Array.isArray(data) ? data : (data?.data || []);
@@ -96,7 +95,7 @@ class WhaleTrackerService {
   // Institution Transactions
   async loadInstitutionTransactions(institutionName, options = {}) {
     try {
-      const data = await unusualWhalesClient.getInstitutionActivity(institutionName, {
+      const data = await fmpUWClient.getUWInstitutionActivity(null, institutionName, {
         limit: options.limit || 100,
       });
       return Array.isArray(data) ? data : (data?.data || []);
@@ -137,7 +136,7 @@ class WhaleTrackerService {
       // Priorité 2: Unusual Whales si pas de données
       if (hedgeFundsData.length === 0) {
         try {
-          const allInstitutions = await unusualWhalesClient.getLatestInstitutionalFilings({
+          const allInstitutions = await fmpUWClient.getUWLatestInstitutionalFilings({
             limit: 100,
           });
           const institutions = Array.isArray(allInstitutions) 
@@ -214,8 +213,8 @@ class WhaleTrackerService {
       if (holdingsData.length === 0 && fundName) {
         try {
           const [holdings, activity] = await Promise.all([
-            unusualWhalesClient.getInstitutionHoldings(fundName, { limit: 50 }),
-            unusualWhalesClient.getInstitutionActivity(fundName, { limit: 20 }),
+            fmpUWClient.getUWInstitutionHoldings(null, fundName, { limit: 50 }),
+            fmpUWClient.getUWInstitutionActivity(null, fundName, { limit: 20 }),
           ]);
           
           holdingsData = Array.isArray(holdings) ? holdings : (holdings?.data || []);

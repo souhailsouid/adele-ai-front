@@ -1,0 +1,584 @@
+### REST Client pour VS Code
+### Extension: REST Client (humao.rest-client)
+### 
+### Variables d'environnement (à définir dans VS Code settings ou dans ce fichier)
+### 
+### IMPORTANT : Après le déploiement de la séparation des API Gateways, il y a maintenant 2 URLs :
+### - @baseUrlMain : API Gateway 1 (routes de l'application principale)
+### - @baseUrlData : API Gateway 2 (routes de données brutes FMP + UW)
+### 
+### Pour obtenir les URLs après terraform apply :
+###   terraform output api_gateway_url        # API Gateway 1
+###   terraform output api_data_gateway_url  # API Gateway 2
+
+### API Gateway 1 : Application Principale (signals, funds, companies, analysis, scoring, etc.)
+@baseUrlMain = https://tsdd1sibd1.execute-api.eu-west-3.amazonaws.com/prod
+
+### API Gateway 2 : Données Brutes (FMP + Unusual Whales)
+### ⚠️ À mettre à jour après terraform apply avec : terraform output api_data_gateway_url
+@baseUrlData = https://faq9dl95v7.execute-api.eu-west-3.amazonaws.com/prod
+
+### Token d'accès (à mettre à jour régulièrement)
+@accessToken = eyJraWQiOiIwekpSMTVhYjBqSk0xdnJmaFBSa0NveGJBaHhnXC9HblhkeU56Y09iRkRyND0iLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJmMWU5OTA3ZS01MDIxLTcwZmUtMzA4ZS0zMzc3NzgyYmE2NjgiLCJpc3MiOiJodHRwczpcL1wvY29nbml0by1pZHAuZXUtd2VzdC0zLmFtYXpvbmF3cy5jb21cL2V1LXdlc3QtM19GUURtaHhWMTQiLCJjbGllbnRfaWQiOiJwa3A0aTgyam50dHRoajJjYmlsdHVkZ3ZhIiwib3JpZ2luX2p0aSI6IjJjODBlYWJhLTgyM2YtNGRlMi1hMjI5LTYyMmMwN2Q4NDdmZCIsImV2ZW50X2lkIjoiMmUzYzU1NzUtZjg3Yi00NDIxLTkxNGUtMDEzMjBmMTFmOTJkIiwidG9rZW5fdXNlIjoiYWNjZXNzIiwic2NvcGUiOiJhd3MuY29nbml0by5zaWduaW4udXNlci5hZG1pbiIsImF1dGhfdGltZSI6MTc2NTEwOTIzNywiZXhwIjoxNzY1MTEyODM3LCJpYXQiOjE3NjUxMDkyMzcsImp0aSI6Ijk4Mjc3YjJmLTdhODctNDkyNS04MDg4LTEzM2ZlNjBhMjM3ZiIsInVzZXJuYW1lIjoiZjFlOTkwN2UtNTAyMS03MGZlLTMwOGUtMzM3Nzc4MmJhNjY4In0.w3R_1Pfj8k9bQlxa1-duYR9SugLQXl89zKPxT4Wcu9ph3-ZmJ29zV4pdSt2zNxPL2wh6pmttomD0I3dDg3BTQrqs4YcsJbhc23MNl4WaMZhtWu87gEUHLDfx7lYjQqMv53UNSgNaoHR502EbnmUfFwnUCVCTJbGfNRW_AsAO9YPZUyECxXVHAa5GtBrshYJv9XL-a_8jEEKu5Z7gvlTfM7YGbIQmq47XrzLa1yKUKt3SuKIqAiXj1uT88rD8Gv7AO4M0omzVaMqkuiOICNt0LQ96yjG_bmK52op42-XyTz4vA5wpcIKxTR5IDajucrDOHwWH_dpndtDtVEH0jHz4pA
+
+@watchId = ff9dcbd4-1e0a-4e48-8604-854cdb5ac407"
+### ============================================
+### ANALYSE COMBINÉE (FMP + UW)
+### ============================================
+
+### Complete Analysis - Analyse complète (fundamentals + sentiment)
+### ✅ API Gateway 1 (Application Principale)
+GET {{baseUrlMain}}/analysis/AAPL/complete
+Authorization: Bearer {{accessToken}}
+
+### Complete Analysis - TSLA
+GET {{baseUrlMain}}/analysis/TSLA/complete
+Authorization: Bearer {{accessToken}}
+
+### Complete Analysis - NVDA
+GET {{baseUrlMain}}/analysis/NVDA/complete
+Authorization: Bearer {{accessToken}}
+
+### Divergence Analysis - Détecte les divergences fundamentals vs sentiment
+GET {{baseUrlMain}}/analysis/AAPL/divergence
+Authorization: Bearer {{accessToken}}
+
+### Divergence Analysis - NVDA
+GET {{baseUrlMain}}/analysis/NVDA/divergence
+Authorization: Bearer {{accessToken}}
+
+### Comprehensive Valuation - Valuation complète (DCF + Sentiment Multiplier)
+GET {{baseUrlMain}}/analysis/AAPL/valuation
+Authorization: Bearer {{accessToken}}
+
+### Comprehensive Valuation - MSFT
+GET {{baseUrlMain}}/analysis/MSFT/valuation
+Authorization: Bearer {{accessToken}}
+
+### Earnings Prediction - Prédiction de surprise d'earnings
+GET {{baseUrlMain}}/analysis/AAPL/earnings-prediction
+Authorization: Bearer {{accessToken}}
+
+### Earnings Prediction - Avec date spécifique
+GET {{baseUrlMain}}/analysis/AAPL/earnings-prediction?earningsDate=2025-01-30
+Authorization: Bearer {{accessToken}}
+
+### Earnings Prediction - TSLA
+GET {{baseUrlMain}}/analysis/TSLA/earnings-prediction
+Authorization: Bearer {{accessToken}}
+
+### Risk Analysis - Analyse de risque (financier + marché)
+GET {{baseUrlMain}}/analysis/AAPL/risk
+Authorization: Bearer {{accessToken}}
+
+### Risk Analysis - TSLA
+GET {{baseUrlMain}}/analysis/TSLA/risk
+Authorization: Bearer {{accessToken}}
+
+### Risk Analysis - NVDA
+GET {{baseUrlMain}}/analysis/NVDA/risk
+Authorization: Bearer {{accessToken}}
+
+### ============================================
+### SCREENER MULTI-CRITÈRES
+### ============================================
+
+### Multi-Criteria Screener - Screening avec critères FMP + UW
+### ✅ API Gateway 1 (Application Principale)
+POST {{baseUrlMain}}/screener/multi-criteria
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "minMarketCap": 1000000000,
+  "maxPERatio": 30,
+  "minRevenueGrowth": 5,
+  "limit": 10
+}
+
+### Multi-Criteria Screener - Technology sector
+POST {{baseUrlMain}}/screener/multi-criteria
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "sector": "Technology",
+  "minMarketCap": 10000000000,
+  "maxPERatio": 25,
+  "limit": 5
+}
+
+### ============================================
+### INSTITUTION TRACKING
+### ============================================
+
+### Institution Tracking - Berkshire Hathaway
+### ✅ API Gateway 1 (Application Principale)
+GET {{baseUrlMain}}/institutions/Berkshire%20Hathaway/tracking
+Authorization: Bearer {{accessToken}}
+
+### Institution Tracking - BlackRock
+GET {{baseUrlMain}}/institutions/BlackRock/tracking
+Authorization: Bearer {{accessToken}}
+
+### Institution Tracking - Vanguard
+GET {{baseUrlMain}}/institutions/Vanguard/tracking
+Authorization: Bearer {{accessToken}}
+
+### ============================================
+### SECTOR ANALYSIS
+### ============================================
+
+### Sector Analysis - Technology
+### ✅ API Gateway 1 (Application Principale)
+GET {{baseUrlMain}}/analysis/sector/Technology
+Authorization: Bearer {{accessToken}}
+
+### Sector Analysis - Healthcare
+GET {{baseUrlMain}}/analysis/sector/Healthcare
+Authorization: Bearer {{accessToken}}
+
+### Sector Analysis - Financial
+GET {{baseUrlMain}}/analysis/sector/Financial
+Authorization: Bearer {{accessToken}}
+
+### ============================================
+### UNUSUAL WHALES - Endpoints de données brutes
+### ============================================
+### ⚠️ API Gateway 2 (Données Brutes) - Mettre à jour @baseUrlData après terraform apply
+
+### Recent Flows - Flow d'options récent
+GET {{baseUrlData}}/unusual-whales/stock/AAPL/flow-recent?limit=10
+Authorization: Bearer {{accessToken}}
+
+### Recent Flows - TSLA
+GET {{baseUrlData}}/unusual-whales/stock/TSLA/flow-recent?limit=10&min_premium=50000
+Authorization: Bearer {{accessToken}}
+
+### Institution Ownership - Propriété institutionnelle
+GET {{baseUrlData}}/unusual-whales/institution/AAPL/ownership
+Authorization: Bearer {{accessToken}}
+
+### Short Interest and Float - Intérêt à découvert
+GET {{baseUrlData}}/unusual-whales/shorts/AAPL/interest-float
+Authorization: Bearer {{accessToken}}
+
+### Dark Pool Trades - Transactions dark pool
+GET {{baseUrlData}}/unusual-whales/dark-pool/AAPL?limit=50
+Authorization: Bearer {{accessToken}}
+
+### Insider Buy/Sells - Transactions d'insiders
+GET {{baseUrlData}}/unusual-whales/stock/AAPL/insider-buy-sells
+Authorization: Bearer {{accessToken}}
+
+### Institution Activity - Activité institutionnelle
+GET {{baseUrlData}}/unusual-whales/institution/AAPL/activity?limit=100
+Authorization: Bearer {{accessToken}}
+
+### ============================================
+### FMP - Endpoints de données brutes
+### ============================================
+### ⚠️ API Gateway 2 (Données Brutes) - Mettre à jour @baseUrlData après terraform apply
+
+### Stock Quote - Cotation
+GET {{baseUrlData}}/fmp/quote/AAPL
+Authorization: Bearer {{accessToken}}
+
+### Income Statement - État des résultats
+GET {{baseUrlData}}/fmp/income-statement/AAPL?limit=5&period=annual
+Authorization: Bearer {{accessToken}}
+
+### Financial Ratios - Ratios financiers
+GET {{baseUrlData}}/fmp/financial-ratios/AAPL?limit=5
+Authorization: Bearer {{accessToken}}
+
+### Key Metrics - Métriques clés
+GET {{baseUrlData}}/fmp/key-metrics/AAPL?limit=5
+Authorization: Bearer {{accessToken}}
+
+### Balance Sheet - Bilan
+GET {{baseUrlData}}/fmp/balance-sheet-statement/AAPL?limit=1
+Authorization: Bearer {{accessToken}}
+
+### Cash Flow Statement - État des flux de trésorerie
+GET {{baseUrlData}}/fmp/cash-flow-statement/AAPL?limit=1
+Authorization: Bearer {{accessToken}}
+
+### DCF Valuation - Valorisation DCF
+GET {{baseUrlData}}/fmp/dcf-valuation/AAPL
+Authorization: Bearer {{accessToken}}
+
+### Levered DCF - DCF avec effet de levier
+GET {{baseUrlData}}/fmp/levered-dcf/AAPL
+Authorization: Bearer {{accessToken}}
+
+### Earnings Report - Rapport de résultats
+GET {{baseUrlData}}/fmp/earnings/AAPL
+Authorization: Bearer {{accessToken}}
+
+### Financial Estimates - Estimations financières
+GET {{baseUrlData}}/fmp/financial-estimates/AAPL?period=quarter
+Authorization: Bearer {{accessToken}}
+
+### Ratings Snapshot - Aperçu des notations
+GET {{baseUrlData}}/fmp/ratings-snapshot/AAPL
+Authorization: Bearer {{accessToken}}
+
+### ============================================
+### TICKER ACTIVITY (Legacy)
+### ============================================
+### ✅ API Gateway 1 (Application Principale)
+
+### Ticker Quote - Cotation
+GET {{baseUrlMain}}/ticker-activity/AAPL/quote
+Authorization: Bearer {{accessToken}}
+
+### Ticker Activity - Activité
+GET {{baseUrlMain}}/ticker-activity/AAPL/activity
+Authorization: Bearer {{accessToken}}
+
+### Ticker Options - Options
+GET {{baseUrlMain}}/ticker-activity/AAPL/options?limit=10
+Authorization: Bearer {{accessToken}}
+
+### Ticker Dark Pool - Dark pool
+GET {{baseUrlMain}}/ticker-activity/AAPL/dark-pool?limit=10
+Authorization: Bearer {{accessToken}}
+
+### Ticker Insights - Insights complets
+GET {{baseUrlMain}}/ticker-insights/AAPL
+Authorization: Bearer {{accessToken}}
+
+### ============================================
+### TESTS DE VALIDATION DES DONNÉES
+### ============================================
+
+### Test 1: Vérifier que Recent Flows retourne des données (API Gateway 2)
+GET {{baseUrlData}}/unusual-whales/stock/AAPL/flow-recent?limit=10
+Authorization: Bearer {{accessToken}}
+
+### Test 2: Vérifier que Institution Ownership retourne des données (API Gateway 2)
+GET {{baseUrlData}}/unusual-whales/institution/AAPL/ownership
+Authorization: Bearer {{accessToken}}
+
+### Test 3: Vérifier que Short Interest retourne des données (API Gateway 2)
+GET {{baseUrlData}}/unusual-whales/shorts/AAPL/interest-float
+Authorization: Bearer {{accessToken}}
+
+### Test 4: Vérifier que Dark Pool retourne des données (API Gateway 2)
+GET {{baseUrlData}}/unusual-whales/dark-pool/AAPL?limit=10
+Authorization: Bearer {{accessToken}}
+
+### Test 5: Vérifier que Complete Analysis utilise les données UW (API Gateway 1)
+GET {{baseUrlMain}}/analysis/AAPL/complete
+Authorization: Bearer {{accessToken}}
+
+### Test 6: Vérifier que Valuation a un prix actuel valide (API Gateway 1)
+GET {{baseUrlMain}}/analysis/AAPL/valuation
+Authorization: Bearer {{accessToken}}
+
+### Test 7: Vérifier que Earnings Prediction a des signaux valides (API Gateway 1)
+GET {{baseUrlMain}}/analysis/AAPL/earnings-prediction
+Authorization: Bearer {{accessToken}}
+
+### Test 8: Vérifier que Score retourne des données (API Gateway 1)
+GET {{baseUrlMain}}/ticker-analysis/AAPL/score 
+Authorization: Bearer {{accessToken}}
+
+### Test 9: Vérifier que Breakdown retourne des données (API Gateway 1)
+GET {{baseUrlMain}}/ticker-analysis/AAPL/breakdown
+Authorization: Bearer {{accessToken}}
+
+### Test 10: Vérifier que Institution Tracking retourne des données (API Gateway 1)
+GET {{baseUrlMain}}/institutions/Berkshire%20Hathaway/tracking
+Authorization: Bearer {{accessToken}}
+
+### Test 11: Vérifier que Gamma Squeeze retourne des données (API Gateway 1)
+GET {{baseUrlMain}}/ticker-analysis/TSLA/gamma-squeeze
+Authorization: Bearer {{accessToken}}
+
+### ============================================
+### SURVEILLANCE - Phase 2
+### ============================================
+### ✅ API Gateway 1 (Application Principale)
+
+### Créer une surveillance pour un ticker
+POST {{baseUrlMain}}/surveillance/watch
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "ticker": "AAPL",
+  "minPremium": 50000,
+  "callVolumeThreshold": 1000000,
+  "putVolumeThreshold": 500000,
+  "darkPoolVolumeThreshold": 5000000,
+  "shortInterestThreshold": 20,
+  "insiderChangeThreshold": 10,
+  "checkInterval": 5,
+  "notificationChannels": ["webhook", "email"],
+  "active": true
+}
+
+### Créer une surveillance pour TSLA
+POST {{baseUrlMain}}/surveillance/watch
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "ticker": "TSLA",
+  "minPremium": 100000,
+  "callVolumeThreshold": 2000000,
+  "shortInterestThreshold": 15,
+  "checkInterval": 5,
+  "notificationChannels": ["webhook"]
+}
+
+### Liste des surveillances de l'utilisateur
+GET {{baseUrlMain}}/surveillance/watches
+Authorization: Bearer {{accessToken}}
+
+### Récupérer les alertes d'une surveillance (remplacer {id} par un watchId réel)
+GET {{baseUrlMain}}/surveillance/watch/b3723b7c-215d-49cf-ad63-0e160d5b80b5/alerts
+Authorization: Bearer {{accessToken}}
+
+### Déclencher manuellement la vérification d'une surveillance (pour générer des alertes)
+POST {{baseUrlMain}}/surveillance/watch/b3723b7c-215d-49cf-ad63-0e160d5b80b5/check
+Authorization: Bearer {{accessToken}}
+
+### Supprimer une surveillance (remplacer {id} par un watchId réel)
+DELETE {{baseUrlMain}}/surveillance/watch/89acab7a-109f-4ff5-8cc4-e5e6ddacb820
+Authorization: Bearer {{accessToken}}
+
+### ============================================
+### ALERTES MULTI-SIGNAUX - Phase 2
+### ============================================
+### ✅ API Gateway 1 (Application Principale)
+
+### Créer une alerte multi-signaux (AND)
+POST {{baseUrlMain}}/alerts
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "ticker": "AAPL",
+  "name": "Alerte Options Flow + Insiders",
+  "description": "Déclenche si options flow élevé ET insiders achètent",
+  "conditions": [
+    {
+      "signal": "options_flow",
+      "operator": "gt",
+      "value": 1000000,
+      "params": {
+        "type": "call"
+      }
+    },
+    {
+      "signal": "insider_activity",
+      "operator": "gt",
+      "value": 2
+    }
+  ],
+  "logic": "AND",
+  "notificationChannels": ["webhook", "email"],
+  "active": true
+}
+
+### Créer une alerte multi-signaux (OR)
+POST {{baseUrlMain}}/alerts
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "ticker": "TSLA",
+  "name": "Alerte Dark Pool OU Short Interest",
+  "description": "Déclenche si dark pool élevé OU short interest élevé",
+  "conditions": [
+    {
+      "signal": "dark_pool",
+      "operator": "gt",
+      "value": 5000000
+    },
+    {
+      "signal": "short_interest",
+      "operator": "gt",
+      "value": 20
+    }
+  ],
+  "logic": "OR",
+  "notificationChannels": ["webhook"],
+  "active": true
+}
+
+### Liste des alertes de l'utilisateur
+GET {{baseUrlMain}}/alerts
+Authorization: Bearer {{accessToken}}
+
+### Récupérer une alerte par ID (remplacer {id} par un alertId réel)
+GET {{baseUrlMain}}/alerts/{id}
+Authorization: Bearer {{accessToken}}
+
+### Mettre à jour une alerte (remplacer {id} par un alertId réel)
+PUT {{baseUrlMain}}/alerts/{id}
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "name": "Alerte mise à jour",
+  "active": false
+}
+
+### Tester une alerte (vérifier si elle se déclencherait maintenant)
+POST {{baseUrlMain}}/alerts/{id}/test
+Authorization: Bearer {{accessToken}}
+
+### Supprimer une alerte (remplacer {id} par un alertId réel)
+DELETE {{baseUrlMain}}/alerts/{id}
+Authorization: Bearer {{accessToken}}
+
+### ============================================
+### SMART MONEY - Phase 3 (Complété)
+### ============================================
+### ✅ API Gateway 1 (Application Principale)
+
+### Top Hedge Funds par performance (défaut: 3 mois)
+GET {{baseUrlMain}}/smart-money/top-hedge-funds
+Authorization: Bearer {{accessToken}}
+
+### Top Hedge Funds - Période 1 mois
+GET {{baseUrlMain}}/smart-money/top-hedge-funds?period=1M
+Authorization: Bearer {{accessToken}}
+
+### Top Hedge Funds - Période 3 mois
+GET {{baseUrlMain}}/smart-money/top-hedge-funds?period=3M
+Authorization: Bearer {{accessToken}}
+
+### Top Hedge Funds - Période 6 mois
+GET {{baseUrlMain}}/smart-money/top-hedge-funds?period=6M
+Authorization: Bearer {{accessToken}}
+
+### Top Hedge Funds - Période 1 an
+GET {{baseUrlMain}}/smart-money/top-hedge-funds?period=1Y
+Authorization: Bearer {{accessToken}}
+
+### Copy Trades - Berkshire Hathaway pour AAPL (par nom - peut ne pas fonctionner)
+GET {{baseUrlMain}}/smart-money/institution/Berkshire%20Hathaway/copy-trades/AAPL
+Authorization: Bearer {{accessToken}}
+
+### Copy Trades - Berkshire Hathaway pour TSLA (par CIK - fonctionne)
+### CIK: 0001697748 (Berkshire Hathaway)
+GET {{baseUrlMain}}/smart-money/institution/0001697748/copy-trades/TSLA
+Authorization: Bearer {{accessToken}}
+
+### Copy Trades - BlackRock pour TSLA (par CIK)
+### CIK: 0001364742 (BlackRock)
+GET {{baseUrlMain}}/smart-money/institution/0001364742/copy-trades/TSLA
+Authorization: Bearer {{accessToken}}
+
+### Copy Trades - Vanguard pour MSFT
+GET {{baseUrlMain}}/smart-money/institution/Vanguard/copy-trades/MSFT
+Authorization: Bearer {{accessToken}}
+
+### Copy Trades - Fidelity pour NVDA
+GET {{baseUrlMain}}/smart-money/institution/Fidelity/copy-trades/NVDA
+Authorization: Bearer {{accessToken}}
+
+### ============================================
+### MARKET ANALYSIS - Phase 4 (Complété)
+### ============================================
+### ✅ API Gateway 1 (Application Principale)
+
+### Sector Rotation - Détection des rotations sectorielles
+GET {{baseUrlMain}}/market-analysis/sector-rotation
+Authorization: Bearer {{accessToken}}
+
+### Market Tide - Sentiment global du marché
+GET {{baseUrlMain}}/market-analysis/market-tide
+Authorization: Bearer {{accessToken}}
+
+### ============================================
+### TESTS COMPLÉMENTAIRES - Services complétés
+### ============================================
+
+### Test 12: Vérifier que Top Hedge Funds retourne des données
+GET {{baseUrlMain}}/smart-money/top-hedge-funds
+Authorization: Bearer {{accessToken}}
+
+### Test 13: Vérifier que Copy Trades retourne des données (par CIK)
+GET {{baseUrlMain}}/smart-money/institution/0001697748/copy-trades/TSLA
+Authorization: Bearer {{accessToken}}
+
+### Test 14: Vérifier que Sector Rotation retourne des données
+GET {{baseUrlMain}}/market-analysis/sector-rotation
+Authorization: Bearer {{accessToken}}
+
+### Test 15: Vérifier que Market Tide retourne des données
+GET {{baseUrlMain}}/market-analysis/market-tide
+Authorization: Bearer {{accessToken}}
+
+### ============================================
+### NOTES
+### ============================================
+###
+### 🔀 SÉPARATION DES API GATEWAYS
+### Après le déploiement, il y a maintenant 2 API Gateways :
+### 
+### 1. API Gateway 1 (@baseUrlMain) : Routes de l'application principale
+###    - /signals, /funds, /companies
+###    - /ticker-activity/*, /ticker-insights/*
+###    - /analysis/*, /screener/*, /institutions/*
+###    - /ticker-analysis/* (score, breakdown, gamma-squeeze)
+###    - /surveillance/* (surveillance continue)
+###    - /alerts/* (alertes multi-signaux)
+###    - /smart-money/* (top hedge funds, copy trades)
+###    - /market-analysis/* (sector rotation, market tide)
+###
+### 2. API Gateway 2 (@baseUrlData) : Routes de données brutes
+###    - /fmp/* (toutes les routes FMP)
+###    - /unusual-whales/* (toutes les routes UW)
+###
+### 📝 INSTRUCTIONS
+###
+### 1. Après terraform apply, récupérez les URLs :
+###    cd infra/terraform
+###    terraform output api_gateway_url        # → Mettre dans @baseUrlMain
+###    terraform output api_data_gateway_url  # → Mettre dans @baseUrlData
+###
+### 2. Remplacez {{accessToken}} par votre token d'accès valide
+### 3. Le token expire après un certain temps, régénérez-le si nécessaire
+###
+### 4. Pour utiliser des variables d'environnement dans VS Code:
+###    - Ouvrez les settings (Cmd/Ctrl + ,)
+###    - Cherchez "rest-client.environmentVariables"
+###    - Ajoutez vos variables
+###
+### 5. Pour tester un endpoint:
+###    - Cliquez sur "Send Request" au-dessus de la requête
+###    - Ou utilisez Cmd/Ctrl + Alt + R
+###
+### 6. Les réponses s'affichent dans un onglet à droite
+###
+### 7. Valeurs suspectes à surveiller:
+###    - sentiment.score = 50 (valeur par défaut)
+###    - callVolume = 0 et putVolume = 0 (pas de données options)
+###    - currentPrice = 0 (prix non extrait)
+###    - totalHoldings = 0 (pas de holdings)
+###    - averagePE = 0 (PE non calculé)
+###
+### 🔍 IDENTIFICATION RAPIDE
+### - Si la route commence par /fmp/ ou /unusual-whales/ → @baseUrlData
+### - Sinon → @baseUrlMain
+###
+### 📝 INSTITUTIONS (Smart Money / Copy Trades)
+### L'API Unusual Whales accepte à la fois les noms d'institutions et les CIK.
+### Pour certaines institutions, le CIK est plus fiable que le nom.
+### 
+### Exemples de CIK :
+### - Berkshire Hathaway: 0001697748
+### - BlackRock: 0001364742
+### - Vanguard: 0000102909
+###
+### Si une requête avec un nom d'institution retourne une erreur 500,
+### essayez d'utiliser le CIK à la place.
+###
+

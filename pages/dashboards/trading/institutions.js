@@ -21,9 +21,12 @@ import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import Autocomplete from "@mui/material/Autocomplete";
+import Chip from "@mui/material/Chip";
 
 // Services
 import unusualWhalesClient from "/lib/unusual-whales/client";
+import intelligenceClient from "/lib/api/intelligenceClient";
+import withAuth from "/hocs/withAuth";
 import metricsService from "/services/metricsService";
 
 // Composants
@@ -33,6 +36,7 @@ import InstitutionOwnership from "/pagesComponents/dashboards/trading/components
 import InstitutionSectors from "/pagesComponents/dashboards/trading/components/InstitutionSectors";
 import InstitutionHoldings from "/pagesComponents/dashboards/trading/components/InstitutionHoldings";
 import InstitutionActivity from "/pagesComponents/dashboards/trading/components/InstitutionActivity";
+import Institution13FDetails from "/pagesComponents/dashboards/trading/arkham/Institution13FDetails";
 
 function TradingInstitutions() {
   
@@ -66,6 +70,10 @@ function TradingInstitutions() {
   const [filterTag, setFilterTag] = useState("");
   const [sortBy, setSortBy] = useState("filing_date"); // filing_date, name, cik
   const [sortDirection, setSortDirection] = useState("desc"); // asc, desc
+  
+  // État pour le dialog des détails 13F
+  const [selectedFiling, setSelectedFiling] = useState(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
 
   // Charger toutes les institutions pour l'Autocomplete (une seule fois au chargement)
@@ -130,32 +138,59 @@ function TradingInstitutions() {
     }
   };
 
-  // Charger les derniers filings avec filtres
+  // Charger les derniers filings avec filtres (nouvel endpoint combiné FMP + UW)
   const loadLatestFilings = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const params = {
-        limit: 500,
-      };
-
-      if (institutionName.trim()) {
-        params.name = institutionName.trim();
-      }
-
-      const data = await unusualWhalesClient.getLatestInstitutionalFilings(params).catch((err) => {
-        console.error("Error loading latest filings:", err);
-        return { data: [] };
+      // Utiliser le nouvel endpoint combiné 13F filings
+      const response = await intelligenceClient.getLatest13FFilings().catch((err) => {
+        console.error("Error loading latest 13F filings:", err);
+        return { success: false, data: [] };
       });
 
-      const extractData = (response) => {
-        if (Array.isArray(response)) return response;
-        if (response?.data && Array.isArray(response.data)) return response.data;
-        return [];
-      };
+      // Extraire les données de la réponse
+      let filings = [];
+      if (response.success && Array.isArray(response.data)) {
+        filings = response.data;
+      } else if (Array.isArray(response)) {
+        filings = response;
+      } else if (response?.data && Array.isArray(response.data)) {
+        filings = response.data;
+      }
 
-      let filings = extractData(data);
+      // Normaliser les données pour correspondre à la structure attendue
+      filings = filings.map(filing => ({
+        cik: filing.cik || filing.ciK || '',
+        name: filing.institutionName && filing.institutionName !== 'None' 
+          ? filing.institutionName 
+          : (filing.name || filing.short_name || 'N/A'),
+        institutionName: filing.institutionName && filing.institutionName !== 'None' 
+          ? filing.institutionName 
+          : (filing.name || filing.short_name || 'N/A'),
+        filing_date: filing.filingDate || filing.filing_date || filing.reportDate || filing.report_date || '',
+        report_date: filing.reportDate || filing.report_date || filing.filingDate || filing.filing_date || '',
+        formType: filing.formType || filing.form_type || filing.form || '13F-HR',
+        source: filing.source || 'FMP', // BOTH, FMP, ou UW
+        url: filing.url || null,
+        // Champs pour compatibilité avec l'ancien format
+        short_name: filing.institutionName && filing.institutionName !== 'None' 
+          ? filing.institutionName 
+          : (filing.name || filing.short_name || 'N/A'),
+        tags: filing.tags || [],
+        is_hedge_fund: filing.is_hedge_fund || false,
+      }));
+
+      // Filtrer par nom d'institution si spécifié
+      if (institutionName && institutionName.trim()) {
+        const searchTerm = institutionName.toLowerCase().trim();
+        filings = filings.filter(filing => {
+          const name = (filing.name || filing.institutionName || '').toLowerCase();
+          const cik = (filing.cik || '').toLowerCase();
+          return name.includes(searchTerm) || cik.includes(searchTerm);
+        });
+      }
       
       // Appliquer les filtres côté client
       if (filterType !== "all") {
@@ -172,7 +207,7 @@ function TradingInstitutions() {
       // Filtrer par date
       if (filterDateFrom) {
         filings = filings.filter(filing => {
-          const filingDate = new Date(filing.filing_date);
+          const filingDate = new Date(filing.filing_date || filing.report_date || 0);
           const fromDate = new Date(filterDateFrom);
           return filingDate >= fromDate;
         });
@@ -180,7 +215,7 @@ function TradingInstitutions() {
       
       if (filterDateTo) {
         filings = filings.filter(filing => {
-          const filingDate = new Date(filing.filing_date);
+          const filingDate = new Date(filing.filing_date || filing.report_date || 0);
           const toDate = new Date(filterDateTo);
           toDate.setHours(23, 59, 59, 999); // Fin de journée
           return filingDate <= toDate;
@@ -202,20 +237,20 @@ function TradingInstitutions() {
         
         switch (sortBy) {
           case "filing_date":
-            aValue = new Date(a.filing_date || 0);
-            bValue = new Date(b.filing_date || 0);
+            aValue = new Date(a.filing_date || a.report_date || 0);
+            bValue = new Date(b.filing_date || b.report_date || 0);
             break;
           case "name":
-            aValue = (a.name || a.short_name || "").toLowerCase();
-            bValue = (b.name || b.short_name || "").toLowerCase();
+            aValue = (a.name || a.institutionName || a.short_name || "").toLowerCase();
+            bValue = (b.name || b.institutionName || b.short_name || "").toLowerCase();
             break;
           case "cik":
-            aValue = a.cik || "";
-            bValue = b.cik || "";
+            aValue = (a.cik || "").toLowerCase();
+            bValue = (b.cik || "").toLowerCase();
             break;
           default:
-            aValue = new Date(a.filing_date || 0);
-            bValue = new Date(b.filing_date || 0);
+            aValue = new Date(a.filing_date || a.report_date || 0);
+            bValue = new Date(b.filing_date || b.report_date || 0);
         }
         
         if (sortBy === "filing_date") {
@@ -395,6 +430,7 @@ function TradingInstitutions() {
     if (internalTab === "list") {
       loadInstitutionsList();
     } else if (internalTab === "filings") {
+      // Charger automatiquement les derniers filings sans nécessiter de recherche
       loadLatestFilings();
     } else if (internalTab === "ownership") {
       // Ne charge pas automatiquement, nécessite un ticker
@@ -480,7 +516,7 @@ function TradingInstitutions() {
           <Card>
             <MDBox p={2}>
               <Grid container spacing={2} alignItems="center">
-                {(internalTab === "sectors" || internalTab === "holdings" || internalTab === "activity" || internalTab === "list" || internalTab === "filings") && (
+                {(internalTab === "sectors" || internalTab === "holdings" || internalTab === "activity" || internalTab === "list") && (
                   <Grid item xs={12} md={4}>
                     <Autocomplete
                       freeSolo
@@ -507,6 +543,46 @@ function TradingInstitutions() {
                           {...params}
                           label="Nom de l'institution"
                           placeholder="Ex: VANGUARD GROUP INC"
+                          variant="standard"
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              handleSearch();
+                            }
+                            params.inputProps?.onKeyDown?.(e);
+                          }}
+                        />
+                      )}
+                      fullWidth
+                    />
+                  </Grid>
+                )}
+                {internalTab === "filings" && (
+                  <Grid item xs={12} md={4}>
+                    <Autocomplete
+                      freeSolo
+                      options={institutionOptions}
+                      value={institutionName ? (typeof institutionName === "string" ? institutionName : institutionName.name || institutionName) : ""}
+                      getOptionLabel={(option) => {
+                        if (typeof option === "string") return option;
+                        return option.name || "";
+                      }}
+                      onInputChange={(event, newInputValue) => {
+                        setInstitutionInput(newInputValue || "");
+                      }}
+                      onChange={(event, newValue) => {
+                        if (typeof newValue === "string") {
+                          setInstitutionName(newValue.trim());
+                        } else if (newValue && newValue.name) {
+                          setInstitutionName(newValue.name.trim());
+                        } else {
+                          setInstitutionName("");
+                        }
+                      }}
+                      renderInput={(params) => (
+                        <MDInput
+                          {...params}
+                          label="Nom de l'institution (optionnel)"
+                          placeholder="Laisser vide pour voir tous les filings"
                           variant="standard"
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
@@ -632,6 +708,7 @@ function TradingInstitutions() {
                       variant="outlined" 
                       color="secondary" 
                       onClick={() => {
+                        setInstitutionName(""); // Réinitialiser aussi le nom d'institution
                         setFilterType("all");
                         setFilterDateFrom("");
                         setFilterDateTo("");
@@ -680,12 +757,22 @@ function TradingInstitutions() {
                   <Card>
                     <MDBox p={2}>
                       <Grid container spacing={2} alignItems="center">
-                        <Grid item xs={12} md={6}>
+                        <Grid item xs={12} md={8}>
                           <MDTypography variant="h6" fontWeight="medium">
-                            Résultats: {latestFilings.length} filing(s)
+                            Résultats: {latestFilings.length} filing(s) 13F
                           </MDTypography>
+                          {!institutionName && (
+                            <MDTypography variant="caption" color="info" fontWeight="medium" display="block">
+                              Affichage de tous les derniers filings 13F combinés (FMP + Unusual Whales)
+                            </MDTypography>
+                          )}
+                          {institutionName && (
+                            <MDTypography variant="caption" color="text.secondary" display="block">
+                              Filtré par institution: {institutionName}
+                            </MDTypography>
+                          )}
                           {(filterType !== "all" || filterDateFrom || filterDateTo || filterTag) && (
-                            <MDTypography variant="caption" color="text.secondary">
+                            <MDTypography variant="caption" color="text.secondary" display="block" mt={0.5}>
                               Filtres actifs: {filterType !== "all" && `Type: ${filterType === "hedge_fund" ? "Hedge Fund" : "Autres"}`}
                               {filterDateFrom && ` | Du: ${new Date(filterDateFrom).toLocaleDateString("fr-FR")}`}
                               {filterDateTo && ` | Au: ${new Date(filterDateTo).toLocaleDateString("fr-FR")}`}
@@ -693,11 +780,37 @@ function TradingInstitutions() {
                             </MDTypography>
                           )}
                         </Grid>
+                        <Grid item xs={12} md={4}>
+                          <MDBox display="flex" gap={1} flexWrap="wrap">
+                            <Chip 
+                              label={`FMP: ${latestFilings.filter(f => f.source === 'FMP' || f.source === 'BOTH').length}`}
+                              size="small"
+                              color="primary"
+                            />
+                            <Chip 
+                              label={`UW: ${latestFilings.filter(f => f.source === 'UW' || f.source === 'BOTH').length}`}
+                              size="small"
+                              color="secondary"
+                            />
+                            <Chip 
+                              label={`BOTH: ${latestFilings.filter(f => f.source === 'BOTH').length}`}
+                              size="small"
+                              color="success"
+                            />
+                          </MDBox>
+                        </Grid>
                       </Grid>
                     </MDBox>
                   </Card>
                 </MDBox>
-                <LatestFilings data={latestFilings} loading={loading} />
+                <LatestFilings 
+                  data={latestFilings} 
+                  loading={loading} 
+                  onFilingClick={(filing) => {
+                    setSelectedFiling(filing);
+                    setDetailsOpen(true);
+                  }}
+                />
               </Grid>
             )}
             {internalTab === "ownership" && (
@@ -723,9 +836,20 @@ function TradingInstitutions() {
           </Grid>
         )}
       </MDBox>
+
+      {/* Dialog pour les détails du filing 13F */}
+      <Institution13FDetails
+        open={detailsOpen}
+        onClose={() => {
+          setDetailsOpen(false);
+          setSelectedFiling(null);
+        }}
+        filing={selectedFiling}
+      />
+
       <Footer />
     </DashboardLayout>
   );
 }
 
-export default TradingInstitutions;
+export default withAuth(TradingInstitutions);

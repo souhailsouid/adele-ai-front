@@ -2,7 +2,8 @@
  * Trading Dashboard - Calendrier Économique
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 import Grid from "@mui/material/Grid";
 import MDBox from "/components/MDBox";
 import MDTypography from "/components/MDTypography";
@@ -12,14 +13,26 @@ import Footer from "/examples/Footer";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
+import LinearProgress from "@mui/material/LinearProgress";
+import Card from "@mui/material/Card";
 import EconomicCalendar from "/pagesComponents/dashboards/trading/components/EconomicCalendar";
 import USFedCalendar from "/pagesComponents/dashboards/trading/components/USFedCalendar";
 import JapanBoJCalendar from "/pagesComponents/dashboards/trading/components/JapanBoJCalendar";
 import ChinaCalendar from "/pagesComponents/dashboards/trading/components/ChinaCalendar";
 import metricsService from "/services/metricsService";
+import { useAuth } from "/hooks/useAuth";
 
 function TradingEconomic() {
+  const router = useRouter();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [calendarTab, setCalendarTab] = useState("zones"); // "zones" ou "complet"
+
+  // Vérifier l'authentification
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated()) {
+      router.push("/authentication/sign-in?redirect=/dashboards/trading/economic");
+    }
+  }, [authLoading, isAuthenticated, router]);
 
 
 
@@ -28,6 +41,41 @@ function TradingEconomic() {
     // Track l'utilisation du calendrier économique
     metricsService.trackFeatureUsage("calendar");
   };
+
+  // Afficher un loader pendant la vérification d'authentification
+  if (authLoading) {
+    return (
+      <DashboardLayout>
+        <DashboardNavbar />
+        <MDBox py={3}>
+          <LinearProgress />
+          <MDTypography variant="body2" color="text" sx={{ mt: 2, textAlign: "center" }}>
+            Vérification de l&apos;authentification...
+          </MDTypography>
+        </MDBox>
+        <Footer />
+      </DashboardLayout>
+    );
+  }
+
+  // Si non authentifié, afficher un message (la redirection est en cours)
+  if (!isAuthenticated()) {
+    return (
+      <DashboardLayout>
+        <DashboardNavbar />
+        <MDBox py={3}>
+          <Card>
+            <MDBox p={3}>
+              <MDTypography variant="body2" color="text">
+                Redirection vers la page de connexion...
+              </MDTypography>
+            </MDBox>
+          </Card>
+        </MDBox>
+        <Footer />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>

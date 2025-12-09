@@ -24,7 +24,8 @@ import DataTable from "/examples/Tables/DataTable";
 import MiniStatisticsCard from "/examples/Cards/StatisticsCards/MiniStatisticsCard";
 
 // Services
-import fmpClient from "/lib/fmp/client";
+import fmpUWClient from "/lib/api/fmpUnusualWhalesClient";
+import withAuth from "/hocs/withAuth";
 import metricsService from "/services/metricsService";
 
 function TradingAnalystEstimates() {
@@ -44,7 +45,7 @@ function TradingAnalystEstimates() {
       return;
     }
     try {
-      const results = await fmpClient.searchCompanyByName(query);
+      const results = await fmpUWClient.searchCompanyByName(query);
       setSearchResults(results.slice(0, 10));
     } catch (err) {
       console.error("Error searching companies:", err);
@@ -291,5 +292,5 @@ function TradingAnalystEstimates() {
   );
 }
 
-export default TradingAnalystEstimates;
+export default withAuth(TradingAnalystEstimates);
 

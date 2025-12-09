@@ -2,7 +2,7 @@
  * Service pour les données de marché globales
  */
 
-import fmpClient from "/lib/fmp/client";
+import fmpUWClient from "/lib/api/fmpUnusualWhalesClient";
 import { getWatchlistSymbols } from "/config/watchlist";
 
 export class MarketService {
@@ -48,7 +48,7 @@ console.log('getMarketOverview_____earningsToday', earningsToday)
    */
   async getMajorIndices() {
     try {
-      const indices = await fmpClient.getMajorIndices();
+      const indices = await fmpUWClient.getFMPMajorIndices();
       return indices.map((index) => {
         const normalized = this.normalizeQuote(index);
         return {
@@ -72,7 +72,7 @@ console.log('getMarketOverview_____earningsToday', earningsToday)
   async getSectorPerformance() {
     try {
       // Récupérer les données de toutes les bourses principales
-      const sectors = await fmpClient.getSectorPerformanceAllExchanges();
+      const sectors = await fmpUWClient.getFMPSectorPerformance();
       
       // L'API retourne un tableau avec { date, sector, exchange, averageChange }
       const allSectors = sectors.map((sector) => ({
@@ -120,7 +120,7 @@ console.log('getMarketOverview_____earningsToday', earningsToday)
   async getEarningsToday(symbols = null) {
     try {
       const today = new Date().toISOString().split("T")[0];
-      const earnings = await fmpClient.getEarningsCalendar(today, today);
+      const earnings = await fmpUWClient.getFMPEarningsCalendar(today, today);
       
       if (!earnings || earnings.length === 0) {
         return [];
@@ -144,7 +144,7 @@ console.log('getMarketOverview_____earningsToday', earningsToday)
    */
   async getMarketNews(limit = 10) {
     try {
-      return await fmpClient.getMarketNews(null, limit);
+      return await fmpUWClient.getFMPMarketNews(null, limit);
     } catch (error) {
       console.error("Error getting market news:", error);
       return [];
@@ -156,7 +156,7 @@ console.log('getMarketOverview_____earningsToday', earningsToday)
    */
   async getStockNews(symbol, limit = 10) {
     try {
-      return await fmpClient.getMarketNews(symbol, limit);
+      return await fmpUWClient.getFMPMarketNews(symbol, limit);
     } catch (error) {
       console.error(`Error getting news for ${symbol}:`, error);
       return [];

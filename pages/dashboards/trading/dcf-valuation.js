@@ -28,7 +28,8 @@ import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
 
 // Services
-import fmpClient from "/lib/fmp/client";
+import fmpUWClient from "/lib/api/fmpUnusualWhalesClient";
+import withAuth from "/hocs/withAuth";
 import metricsService from "/services/metricsService";
 
 function TradingDCFValuation() {
@@ -56,7 +57,7 @@ function TradingDCFValuation() {
       return;
     }
     try {
-      const results = await fmpClient.searchCompanyByName(query);
+      const results = await fmpUWClient.searchCompanyByName(query);
       setSearchResults(results.slice(0, 10));
     } catch (err) {
       console.error("Error searching companies:", err);
@@ -695,5 +696,5 @@ function TradingDCFValuation() {
   );
 }
 
-export default TradingDCFValuation;
+export default withAuth(TradingDCFValuation);
 

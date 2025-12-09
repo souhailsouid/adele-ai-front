@@ -29,10 +29,10 @@ import Footer from "/examples/Footer";
 function Analytics() {
   const router = useRouter();
   
-  // Rediriger automatiquement vers la page d'accueil par défaut
+  // Rediriger automatiquement vers le dashboard trading
   useEffect(() => {
-    // Redirection immédiate vers la page d'accueil
-    router.replace("/");
+    // Redirection immédiate vers le dashboard trading
+    router.replace("/dashboards/trading");
   }, [router]);
   
   // Afficher un message de chargement pendant la redirection
@@ -41,7 +41,7 @@ function Analytics() {
       <DashboardNavbar />
       <MDBox py={3} display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
         <MDTypography variant="h6" color="text">
-          Redirection vers la page d&apos;accueil...
+          Redirection vers le Dashboard Trading...
         </MDTypography>
       </MDBox>
       <Footer />

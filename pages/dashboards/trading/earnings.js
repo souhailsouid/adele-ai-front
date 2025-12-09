@@ -24,7 +24,8 @@ import DataTable from "/examples/Tables/DataTable";
 
 // Services
 import smartScreener from "/services/screener";
-import fmpClient from "/lib/fmp/client";
+import fmpUWClient from "/lib/api/fmpUnusualWhalesClient";
+import withAuth from "/hocs/withAuth";
 import metricsService from "/services/metricsService";
 import CompanyFilter from "/pagesComponents/dashboards/trading/components/CompanyFilter";
 import EarningsOpportunities from "/pagesComponents/dashboards/trading/components/EarningsOpportunities";
@@ -69,7 +70,7 @@ function TradingEarnings() {
       return;
     }
     try {
-      const results = await fmpClient.searchCompanyByName(query);
+      const results = await fmpUWClient.searchCompanyByName(query);
       setSearchResults(results.slice(0, 10));
     } catch (err) {
       console.error("Error searching companies:", err);
@@ -84,7 +85,7 @@ function TradingEarnings() {
       setLoadingEstimates(true);
       setError(null);
       const [estimatesData] = await Promise.allSettled([
-        fmpClient.getAnalystEstimates(symbol.toUpperCase(), period, 0, 10), // Max 10 pour plan Starter
+        fmpUWClient.getFMPAnalystEstimates(symbol.toUpperCase(), period, 10), // Max 10 pour plan Starter
       ]);
       if (estimatesData.status === "fulfilled") {
         setAnalystEstimates(Array.isArray(estimatesData.value) ? estimatesData.value : []);
@@ -103,7 +104,7 @@ function TradingEarnings() {
     try {
       setLoadingEstimates(true);
       setError(null);
-      const transcriptData = await fmpClient.getEarningsTranscript(symbol.toUpperCase(), year, quarter);
+      const transcriptData = await fmpUWClient.getFMPEarningsTranscript(symbol.toUpperCase(), year, quarter);
       setEarningsTranscript(transcriptData);
     } catch (err) {
       console.error("Error loading earnings transcript:", err);
@@ -431,5 +432,5 @@ function TradingEarnings() {
   );
 }
 
-export default TradingEarnings;
+export default withAuth(TradingEarnings);
 

@@ -36,6 +36,7 @@ import TransactionsModal from "/pagesComponents/dashboards/trading/components/Tr
 
 // Services
 import whaleTrackerService from "/services/whaleTrackerService";
+import withAuth from "/hocs/withAuth";
 
 function TradingWhaleTracker() {
   const [currentTab, setCurrentTab] = useState(0);
@@ -256,5 +257,5 @@ function TradingWhaleTracker() {
   );
 }
 
-export default TradingWhaleTracker;
+export default withAuth(TradingWhaleTracker);
 

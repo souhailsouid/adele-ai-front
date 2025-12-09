@@ -418,22 +418,87 @@ function getDefaultTransactionsColumns() {
       ),
     },
     {
-      Header: "Prix Filing",
-      accessor: "price_on_filing",
+      Header: "Prix Report",
+      accessor: "price_on_report",
       width: "10%",
-      Cell: ({ value }) => formatCurrency(value),
+      Cell: ({ value, row }) => {
+        const priceReport = parseFloat(value) || 0;
+        const priceFiling = parseFloat(row.original.price_on_filing) || 0;
+        const close = parseFloat(row.original.close) || 0;
+        return (
+          <MDBox>
+            <MDTypography variant="body2" fontWeight="medium">
+              {formatCurrency(priceReport)}
+            </MDTypography>
+            {priceFiling > 0 && priceFiling !== priceReport && (
+              <MDTypography variant="caption" color="text.secondary" display="block">
+                Filing: {formatCurrency(priceFiling)}
+              </MDTypography>
+            )}
+            {close > 0 && close !== priceReport && (
+              <MDTypography variant="caption" color={close > priceReport ? "success" : "error"} display="block">
+                Actuel: {formatCurrency(close)}
+              </MDTypography>
+            )}
+          </MDBox>
+        );
+      },
     },
     {
-      Header: "Report Date",
-      accessor: "report_date",
+      Header: "Prix Moyen",
+      accessor: "avg_price",
       width: "10%",
-      Cell: ({ value }) => formatDate(value, "fr-FR", false),
+      Cell: ({ value, row }) => {
+        const avgPrice = parseFloat(value) || 0;
+        const close = parseFloat(row.original.close) || 0;
+        const profit = close > 0 && avgPrice > 0 ? ((close - avgPrice) / avgPrice) * 100 : 0;
+        return (
+          <MDBox>
+            <MDTypography variant="body2" fontWeight="medium">
+              {formatCurrency(avgPrice)}
+            </MDTypography>
+            {profit !== 0 && (
+              <MDTypography 
+                variant="caption" 
+                color={profit > 0 ? "success" : "error"} 
+                display="block"
+              >
+                {profit > 0 ? "+" : ""}{profit.toFixed(1)}%
+              </MDTypography>
+            )}
+          </MDBox>
+        );
+      },
     },
     {
-      Header: "Filing Date",
-      accessor: "filing_date",
-      width: "10%",
-      Cell: ({ value }) => formatDate(value, "fr-FR", false),
+      Header: "Dates",
+      width: "15%",
+      Cell: ({ row }) => {
+        const reportDate = row.original.report_date;
+        const filingDate = row.original.filing_date;
+        return (
+          <MDBox>
+            <MDBox mb={0.5}>
+              <MDTypography variant="caption" color="text.secondary" display="block">
+                Report:
+              </MDTypography>
+              <MDTypography variant="body2" fontWeight="medium">
+                {formatDate(reportDate, "fr-FR", false)}
+              </MDTypography>
+            </MDBox>
+            {filingDate && (
+              <MDBox>
+                <MDTypography variant="caption" color="text.secondary" display="block">
+                  Filing:
+                </MDTypography>
+                <MDTypography variant="body2" color="text.secondary">
+                  {formatDate(filingDate, "fr-FR", false)}
+                </MDTypography>
+              </MDBox>
+            )}
+          </MDBox>
+        );
+      },
     },
   ];
 }

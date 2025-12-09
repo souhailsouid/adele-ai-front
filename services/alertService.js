@@ -2,7 +2,7 @@
  * Service de gestion des alertes personnalisées
  */
 
-import fmpClient from "/lib/fmp/client";
+import fmpUWClient from "/lib/api/fmpUnusualWhalesClient";
 
 export class AlertService {
   constructor() {
@@ -94,7 +94,7 @@ export class AlertService {
       if (alert.triggered) continue;
 
       try {
-        const quote = await fmpClient.getQuote(alert.symbol);
+        const quote = await fmpUWClient.getFMPQuote(alert.symbol);
         if (!quote) continue;
 
         const isTriggered = this.isPriceAlertTriggered(alert, quote);
@@ -125,7 +125,7 @@ export class AlertService {
       if (alert.triggered) continue;
 
       try {
-        const quote = await fmpClient.getQuote(alert.symbol);
+        const quote = await fmpUWClient.getFMPQuote(alert.symbol);
         if (!quote || !quote.avgVolume) continue;
 
         const volumeRatio = quote.volume / quote.avgVolume;
@@ -161,7 +161,7 @@ export class AlertService {
       if (alert.triggered) continue;
 
       try {
-        const rsi = await fmpClient.getRSI(alert.symbol, 14, "1day");
+        const rsi = await fmpUWClient.getFMPRSI(alert.symbol, 14, "1day");
         if (!rsi) continue;
 
         const rsiValue = typeof rsi === "number" ? rsi : rsi.rsi;

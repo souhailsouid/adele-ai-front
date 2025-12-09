@@ -1,0 +1,165 @@
+================================================================================
+LISTE COMPLÈTE DES FICHIERS UTILISANT FMP ET UNUSUAL WHALES APIs
+================================================================================
+
+⚠️ PROBLÈME DE SÉCURITÉ: Clés API exposées côté client (NEXT_PUBLIC_*)
+→ Migration vers backend nécessaire
+
+================================================================================
+FMP API - 35 FICHIERS
+================================================================================
+
+CLIENTS & SERVICES (Priorité 1 - Migration Critique)
+----------------------------------------------------
+lib/fmp/client.js
+services/aladdinService.js
+services/tickerActivityService.js
+services/financialAnalysisService.js
+services/metricsService.js
+services/marketService.js
+services/screener.js
+services/economicCalendarService.js
+services/alertService.js
+
+PAGES DIRECTES (Priorité 2)
+---------------------------
+pages/dashboards/trading/financial-analysis.js
+pages/dashboards/trading/dcf-valuation.js
+pages/dashboards/trading/earnings.js
+pages/dashboards/trading/analyst-estimates.js
+pages/dashboards/trading/insider-buysells.js
+pages/dashboards/trading/price-history.js
+pages/index.js
+
+PAGES VIA SERVICES
+------------------
+pages/dashboards/trading/portfolio-intelligence.js
+pages/dashboards/trading/opportunities-scanner.js
+pages/dashboards/trading/whale-tracker.js
+pages/dashboards/trading/ticker-activity.js
+
+COMPOSANTS
+----------
+pagesComponents/dashboards/trading/components/FMPInsiderTradesTab.js
+
+AUTRES FICHIERS
+---------------
+services/institutionalFlowDetector.js
+
+================================================================================
+UNUSUAL WHALES API - 72 FICHIERS
+================================================================================
+
+CLIENTS & SERVICES (Priorité 1 - Migration Critique)
+----------------------------------------------------
+lib/unusual-whales/client.js
+services/aladdinService.js
+services/tickerActivityService.js
+services/whaleTrackerService.js
+services/institutionalFlowDetector.js
+
+PAGES DIRECTES (Priorité 2)
+---------------------------
+pages/dashboards/trading/unusual-whales.js
+pages/dashboards/trading/unusual-whales-screener.js
+pages/dashboards/trading/congress.js
+pages/dashboards/trading/institutions.js
+pages/dashboards/trading/insider-buysells.js
+pages/dashboards/trading/short-data.js
+pages/dashboards/trading/news.js
+pages/dashboards/trading/fda-calendar.js
+pages/dashboards/trading/stock-state.js
+pages/dashboards/trading/correlations.js
+pages/dashboards/trading/politician-portfolios.js
+pages/dashboards/trading/option-contracts.js
+pages/dashboards/trading/seasonality.js
+pages/dashboards/trading/ticker-analysis.js
+pages/index.js
+
+PAGES VIA SERVICES
+------------------
+pages/dashboards/trading/whale-tracker.js
+pages/dashboards/trading/ticker-activity.js
+pages/dashboards/trading/portfolio-intelligence.js
+pages/dashboards/trading/opportunities-scanner.js
+pages/dashboards/trading/guru-flow-tracker.js
+
+COMPOSANTS WHALE TRACKER
+------------------------
+pagesComponents/dashboards/trading/components/FlowAlertsTab.js
+pagesComponents/dashboards/trading/components/DarkPoolTab.js
+pagesComponents/dashboards/trading/components/InsiderTradesTab.js
+pagesComponents/dashboards/trading/components/CongressTradesTab.js
+pagesComponents/dashboards/trading/components/InstitutionsTab.js
+pagesComponents/dashboards/trading/components/HedgeFundsTab.js
+
+AUTRES COMPOSANTS
+-----------------
+pagesComponents/dashboards/trading/components/FlowAlerts.js
+pagesComponents/dashboards/trading/components/FlowRecent.js
+pagesComponents/dashboards/trading/components/InsiderBuySellsTicker.js
+pagesComponents/dashboards/trading/hooks/useGreekFlow.js
+pagesComponents/dashboards/trading/components/StockState.js
+pagesComponents/dashboards/trading/components/Correlations.js
+pagesComponents/dashboards/trading/components/CompaniesInSector.js
+pagesComponents/dashboards/trading/components/StockVolumePriceLevels.js
+pagesComponents/dashboards/trading/components/SpotExposuresByExpiryStrike.js
+pagesComponents/dashboards/trading/components/SpotExposuresByStrike.js
+pagesComponents/dashboards/trading/components/SpotExposures.js
+pagesComponents/dashboards/trading/components/OptionPriceLevels.js
+pagesComponents/dashboards/trading/components/VolatilityStats.js
+pagesComponents/dashboards/trading/components/RealizedVolatility.js
+pagesComponents/dashboards/trading/components/VolatilityTermStructure.js
+pagesComponents/dashboards/trading/components/VolumeOIExpiry.js
+pagesComponents/dashboards/trading/components/OptionsVolume.js
+pagesComponents/dashboards/trading/components/RiskReversalSkew.js
+pagesComponents/dashboards/trading/components/GreekExposureByStrikeAndExpiry.js
+pagesComponents/dashboards/trading/components/OptionChainsTicker.js
+pagesComponents/dashboards/trading/components/OHLCTicker.js
+pagesComponents/dashboards/trading/components/NetPremiumTicks.js
+pagesComponents/dashboards/trading/components/IVRankTicker.js
+pagesComponents/dashboards/trading/components/InterpolatedIV.js
+pagesComponents/dashboards/trading/components/OIPerStrikeTicker.js
+pagesComponents/dashboards/trading/components/OIPerExpiryTicker.js
+pagesComponents/dashboards/trading/components/OIChangeTicker.js
+pagesComponents/dashboards/trading/components/GreekExposureByStrike.js
+pagesComponents/dashboards/trading/components/GreekExposureByExpiry.js
+pagesComponents/dashboards/trading/components/GreekExposureOverview.js
+pagesComponents/dashboards/trading/components/FlowPerStrike.js
+pagesComponents/dashboards/trading/components/FlowPerExpiry.js
+pagesComponents/dashboards/trading/components/UnusualVolume.js
+
+================================================================================
+FICHIERS CRITIQUES (À MIGRER EN PRIORITÉ)
+================================================================================
+
+1. lib/fmp/client.js
+2. lib/unusual-whales/client.js
+3. services/aladdinService.js
+4. services/tickerActivityService.js
+5. services/whaleTrackerService.js
+6. services/institutionalFlowDetector.js
+
+================================================================================
+VARIABLES D'ENVIRONNEMENT
+================================================================================
+
+À CRÉER (Backend - .env.local):
+FMP_API_KEY=your_key_here
+UNUSUAL_WHALES_API_KEY=your_key_here
+
+À SUPPRIMER (Frontend):
+NEXT_PUBLIC_FMP_API_KEY
+NEXT_PUBLIC_UNUSUAL_WHALES
+
+================================================================================
+DOCUMENTATION COMPLÈTE
+================================================================================
+
+Voir SECURITY_API_MIGRATION.md pour les détails complets
+Voir BACKEND_API_MIGRATION_SUMMARY.md pour le résumé backend
+
+
+
+
+

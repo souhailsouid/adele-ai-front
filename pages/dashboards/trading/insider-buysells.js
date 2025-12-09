@@ -80,7 +80,7 @@ function TradingInsiderBuySells() {
             return;
         }
         try {
-            const results = await fmpClient.searchCompanyByName(query);
+            const results = await fmpUWClient.searchCompanyByName(query);
             setSearchResults(results.slice(0, 10));
         } catch (err) {
             console.error("Error searching companies:", err);
@@ -93,7 +93,7 @@ function TradingInsiderBuySells() {
         try {
             setLoadingFMP(true);
             setError(null);
-            const data = await fmpClient.getInsiderTrades(symbol, 50); // Limite réduite pour plan Starter
+            const data = await fmpUWClient.getFMPInsiderTrades(symbol, 50); // Limite réduite pour plan Starter
             setFmpInsiderData(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error("Error loading FMP insider trades:", err);
@@ -280,5 +280,5 @@ function TradingInsiderBuySells() {
     );
 }
 
-export default TradingInsiderBuySells;
+export default withAuth(TradingInsiderBuySells);
 

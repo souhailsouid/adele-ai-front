@@ -4,7 +4,7 @@ import Router from "next/router";
 
 export default function Custom404() {
   useEffect(() => {
-    Router.push("/");
+    Router.push("/dashboards/trading");
   });
 
   return <div />;

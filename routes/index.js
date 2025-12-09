@@ -75,37 +75,24 @@ function getRoutes(user = null) {
       key: "trading",
       icon: <Icon fontSize="medium">dashboard</Icon>,
       collapse: [
-
+        {
+          name: "Accueil",
+          key: "trading-home",
+          route: "/dashboards/trading",
+        },
         {
           name: "Vue d'ensemble",
-          key: "trading-overview",
-          route: "/dashboards/trading/overview",
-        },
-        {
-          name: "Earnings",
-          key: "trading-earnings",
-          route: "/dashboards/trading/earnings",
-        },
-        {
-          name: "Screener",
-          key: "trading-screener",
-          route: "/dashboards/trading/screener",
+          key: "trading-overview-dashboard",
+          route: "/dashboards/trading/overview-dashboard",
         },
         {
           name: "Calendrier Économique",
           key: "trading-economic",
           route: "/dashboards/trading/economic",
         },
-        {
-          name: "Alertes",
-          key: "trading-alerts",
-          route: "/dashboards/trading/alerts",
-        },
-        {
-          name: "Analyse Financière",
-          key: "trading-financial-analysis",
-          route: "/dashboards/trading/financial-analysis",
-        },
+      
+      
+      
         {
           name: "Estimations Analystes",
           key: "trading-analyst-estimates",
@@ -161,11 +148,36 @@ function getRoutes(user = null) {
           key: "trading-insider-buysells",
           route: "/dashboards/trading/insider-buysells",
         },
-        {
-          name: "🐋 Whale Tracker",
-          key: "trading-whale-tracker",
-          route: "/dashboards/trading/whale-tracker",
-        },
+      {
+        name: "🐋 Whale Tracker",
+        key: "trading-whale-tracker",
+        route: "/dashboards/trading/whale-tracker",
+      },
+      {
+        name: "🧠 Portfolio Intelligence",
+        key: "trading-portfolio-intelligence",
+        route: "/dashboards/trading/portfolio-intelligence",
+      },
+      {
+        name: "🔍 Opportunities Scanner",
+        key: "trading-opportunities-scanner",
+        route: "/dashboards/trading/opportunities-scanner",
+      },
+      {
+        name: "🔥 Guru Flow Tracker",
+        key: "trading-guru-flow-tracker",
+        route: "/dashboards/trading/guru-flow-tracker",
+      },
+      {
+        name: "📊 Activité par Ticker",
+        key: "trading-ticker-activity",
+        route: "/dashboards/trading/ticker-activity",
+      },
+      {
+        name: "🔍 Ticker Insights",
+        key: "trading-ticker-insights",
+        route: "/dashboards/trading/ticker-insights",
+      },
         {
           name: "FDA Calendar",
           key: "trading-fda-calendar",
@@ -242,6 +254,84 @@ function getRoutes(user = null) {
         },
 
 
+      ],
+    },
+    {
+      type: "collapse",
+      name: "Intelligence",
+      key: "intelligence",
+      icon: <Icon fontSize="medium">psychology</Icon>,
+      collapse: [
+        {
+          name: "Vue d'ensemble",
+          key: "intelligence-overview",
+          route: "/dashboards/intelligence/overview",
+        },
+        {
+          name: "Analyse Complète",
+          key: "intelligence-complete-analysis",
+          route: "/dashboards/intelligence/complete-analysis",
+        },
+        {
+          name: "Divergence Analysis",
+          key: "intelligence-divergence",
+          route: "/dashboards/intelligence/divergence-analysis",
+        },
+        {
+          name: "Valuation Complète",
+          key: "intelligence-valuation",
+          route: "/dashboards/intelligence/valuation",
+        },
+        {
+          name: "Earnings Prediction",
+          key: "intelligence-earnings-prediction",
+          route: "/dashboards/intelligence/earnings-prediction",
+        },
+        {
+          name: "Risk Analysis",
+          key: "intelligence-risk-analysis",
+          route: "/dashboards/intelligence/risk-analysis",
+        },
+        {
+          name: "Sector Analysis",
+          key: "intelligence-sector-analysis",
+          route: "/dashboards/intelligence/sector-analysis",
+        },
+        {
+          name: "Multi-Criteria Screener",
+          key: "intelligence-screener",
+          route: "/dashboards/intelligence/multi-criteria-screener",
+        },
+        {
+          name: "Scoring Ticker",
+          key: "intelligence-ticker-scoring",
+          route: "/dashboards/intelligence/ticker-scoring",
+        },
+        {
+          name: "Gamma Squeeze",
+          key: "intelligence-gamma-squeeze",
+          route: "/dashboards/intelligence/gamma-squeeze",
+        },
+        {
+          name: "Market Intelligence",
+          key: "intelligence-market",
+          route: "/dashboards/intelligence/market",
+        },
+        {
+          name: "Surveillance",
+          key: "intelligence-surveillance",
+          route: "/dashboards/intelligence/surveillance",
+        },
+        {
+          name: "Alerts Management",
+          key: "intelligence-alerts",
+          route: "/dashboards/intelligence/alerts",
+        },
+        {
+          name: "Smart Money",
+          key: "intelligence-smart-money",
+          route: "/dashboards/intelligence/smart-money",
+        },
       ],
     },
 

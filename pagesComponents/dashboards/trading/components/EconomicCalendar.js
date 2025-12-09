@@ -22,7 +22,7 @@ function EconomicCalendar() {
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState("high"); // "high", "veryImportant", "all"
   const [filters, setFilters] = useState({
-    period: "thisMonth",
+    period: "next30Days", // Par défaut, afficher les 30 prochains jours à partir d'aujourd'hui
     impact: "all",
     country: "all",
     customFrom: "",
@@ -54,56 +54,88 @@ function EconomicCalendar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter, filters]);
 
-  // Calculer les dates selon la période
+  // Calculer les dates selon la période (toujours dynamique à partir de la date du jour)
   const getPeriodDates = (periodValue, customFrom, customTo) => {
     if (periodValue === "custom" && customFrom && customTo) {
       return { from: customFrom, to: customTo };
     }
     
+    // Toujours utiliser la date du jour actuelle (dynamique)
     const today = new Date();
+    // S'assurer que l'heure est à minuit pour éviter les problèmes de fuseau horaire
+    today.setHours(0, 0, 0, 0);
+    
     let from, to;
     
     switch (periodValue) {
+      case "today":
+        // Aujourd'hui uniquement
+        from = today.toISOString().split("T")[0];
+        to = today.toISOString().split("T")[0];
+        break;
       case "thisWeek":
+        // Semaine en cours (du lundi au dimanche)
         const monday = new Date(today);
-        monday.setDate(today.getDate() - today.getDay() + 1);
+        const dayOfWeek = today.getDay(); // 0 = dimanche, 1 = lundi, etc.
+        const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        monday.setDate(today.getDate() + daysToMonday);
+        monday.setHours(0, 0, 0, 0);
         from = monday.toISOString().split("T")[0];
         const sunday = new Date(monday);
         sunday.setDate(monday.getDate() + 6);
         to = sunday.toISOString().split("T")[0];
         break;
       case "nextWeek":
+        // Semaine prochaine
         const nextMonday = new Date(today);
-        nextMonday.setDate(today.getDate() - today.getDay() + 8);
+        const nextDayOfWeek = today.getDay();
+        const nextDaysToMonday = dayOfWeek === 0 ? 1 : 8 - nextDayOfWeek;
+        nextMonday.setDate(today.getDate() + nextDaysToMonday);
+        nextMonday.setHours(0, 0, 0, 0);
         from = nextMonday.toISOString().split("T")[0];
         const nextSunday = new Date(nextMonday);
         nextSunday.setDate(nextMonday.getDate() + 6);
         to = nextSunday.toISOString().split("T")[0];
         break;
       case "thisMonth":
+        // Mois en cours (du 1er au dernier jour du mois)
         from = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split("T")[0];
         to = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split("T")[0];
         break;
       case "nextMonth":
+        // Mois prochain
         from = new Date(today.getFullYear(), today.getMonth() + 1, 1).toISOString().split("T")[0];
         to = new Date(today.getFullYear(), today.getMonth() + 2, 0).toISOString().split("T")[0];
         break;
       case "thisQuarter":
+        // Trimestre en cours
         const quarter = Math.floor(today.getMonth() / 3);
         from = new Date(today.getFullYear(), quarter * 3, 1).toISOString().split("T")[0];
         to = new Date(today.getFullYear(), (quarter + 1) * 3, 0).toISOString().split("T")[0];
         break;
       case "next30Days":
+        // 30 prochains jours à partir d'aujourd'hui
         from = today.toISOString().split("T")[0];
         const future30 = new Date(today);
         future30.setDate(today.getDate() + 30);
         to = future30.toISOString().split("T")[0];
         break;
+      case "next90Days":
+        // 90 prochains jours à partir d'aujourd'hui
+        from = today.toISOString().split("T")[0];
+        const future90 = new Date(today);
+        future90.setDate(today.getDate() + 90);
+        to = future90.toISOString().split("T")[0];
+        break;
       default:
-        from = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split("T")[0];
-        to = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split("T")[0];
+        // Par défaut : 30 prochains jours à partir d'aujourd'hui
+        from = today.toISOString().split("T")[0];
+        const defaultFuture = new Date(today);
+        defaultFuture.setDate(today.getDate() + 30);
+        to = defaultFuture.toISOString().split("T")[0];
     }
     
+    console.log(`[EconomicCalendar] Calculated dates for period "${periodValue}": from ${from} to ${to}`);
     return { from, to };
   };
 
@@ -115,19 +147,36 @@ function EconomicCalendar() {
       // Calculer les dates selon la période
       const { from, to } = getPeriodDates(filters.period, filters.customFrom, filters.customTo);
       
+      console.log("[EconomicCalendar] Loading events with filters:", {
+        filter,
+        filters,
+        from,
+        to,
+      });
+      
       // Récupérer les événements avec les filtres et les dates spécifiques
-      // Les trois pays autorisés : US, Chine, Japon
-      const allowedCountries = ["US", "CN", "JP"];
+      // Pour les événements High impact, on inclut tous les pays majeurs (US, CN, JP, EU, GB, etc.)
+      // Pour les autres filtres, on peut restreindre aux pays majeurs
+      const majorCountries = ["US", "CN", "JP", "EU", "GB", "DE", "FR", "CA", "AU", "NZ"];
+      const allowedCountries = ["US", "CN", "JP"]; // Pays par défaut pour les filtres normaux
       let data = [];
       
       // Déterminer les pays à filtrer
-      // Si "all" est sélectionné, on prend les 3 pays autorisés
-      // Sinon, on prend uniquement le pays sélectionné (mais on vérifie qu'il est autorisé)
+      // Si "all" est sélectionné, on prend tous les pays majeurs pour voir plus d'événements
+      // Sinon, on prend uniquement le pays sélectionné
       const countriesToFilter = filters.country !== "all" 
-        ? (allowedCountries.includes(filters.country) ? [filters.country] : allowedCountries)
-        : allowedCountries;
+        ? (majorCountries.includes(filters.country) ? [filters.country] : allowedCountries)
+        : majorCountries; // Utiliser majorCountries au lieu de allowedCountries pour voir plus d'événements
       
       const impact = filters.impact !== "all" ? filters.impact : null;
+      
+      console.log("[EconomicCalendar] Calling API with:", {
+        daysAhead: 90,
+        impact: filter === "high" ? "High" : impact,
+        countries: countriesToFilter,
+        from,
+        to,
+      });
       
       // Utiliser directement l'API avec from/to
       if (filter === "high") {
@@ -148,6 +197,7 @@ function EconomicCalendar() {
           from,
           to
         );
+        console.log("[EconomicCalendar] Received", allEvents?.length || 0, "events before filtering");
         // Appliquer le filtre "très importants" manuellement
         data = allEvents.filter((e) => {
           // Vérifier d'abord que le pays correspond au filtre
@@ -173,8 +223,23 @@ function EconomicCalendar() {
         );
       }
       
-      // Filtrer pour s'assurer qu'on n'a que les pays autorisés (sécurité)
-      data = data.filter((e) => allowedCountries.includes(e.country));
+      console.log("[EconomicCalendar] Received", data?.length || 0, "events from API");
+      
+      // Filtrer pour s'assurer qu'on n'a que les pays majeurs (sécurité)
+      // Mais seulement si un filtre de pays spécifique est appliqué
+      if (filters.country !== "all") {
+        const beforeCountryFilter = data.length;
+        const targetCountries = filters.country !== "all" 
+          ? (majorCountries.includes(filters.country) ? [filters.country] : allowedCountries)
+          : majorCountries;
+        data = data.filter((e) => targetCountries.includes(e.country));
+        console.log("[EconomicCalendar] After country filter:", data.length, "events (was", beforeCountryFilter, ")");
+      } else {
+        // Si "all" est sélectionné, on garde tous les pays majeurs
+        const beforeCountryFilter = data.length;
+        data = data.filter((e) => majorCountries.includes(e.country));
+        console.log("[EconomicCalendar] After major countries filter:", data.length, "events (was", beforeCountryFilter, ")");
+      }
       
       // Filtrer par date spécifique si sélectionnée
       if (filters.specificDate) {
@@ -197,15 +262,44 @@ function EconomicCalendar() {
         });
       }
       
-      // Filtrer les événements invalides
-      const validEvents = data.filter((event) => {
-        return event && typeof event === 'object' && event.date && event.event;
-      });
+      // Filtrer les événements invalides et normaliser les données
+      // Note: Le service normalise déjà les données, mais on s'assure qu'elles sont complètes
+      const validEvents = data
+        .filter((event) => {
+          return event && typeof event === 'object' && (event.date || event.event);
+        })
+        .map((event) => {
+          // Les données sont déjà normalisées par le service, mais on ajoute des valeurs par défaut si nécessaire
+          // Extraire l'heure de la date si elle contient une heure (format "2025-12-09 03:30:00")
+          let time = event.time || null;
+          if (!time && event.date && typeof event.date === 'string' && event.date.includes(' ')) {
+            const dateParts = event.date.split(' ');
+            if (dateParts.length > 1) {
+              time = dateParts[1].substring(0, 5); // Prendre seulement HH:MM
+            }
+          }
+          
+          return {
+            date: event.date || event.releaseDate || '',
+            event: event.event || event.name || event.title || 'N/A',
+            country: event.country || event.countryCode || 'N/A',
+            currency: event.currency || null,
+            previous: event.previous !== undefined && event.previous !== null ? Number(event.previous) : null,
+            estimate: event.estimate !== undefined && event.estimate !== null ? Number(event.estimate) : null,
+            actual: event.actual !== undefined && event.actual !== null ? Number(event.actual) : null,
+            change: event.change !== undefined && event.change !== null ? Number(event.change) : null,
+            changePercentage: event.changePercentage !== undefined && event.changePercentage !== null ? Number(event.changePercentage) : null,
+            impact: event.impact || event.importance || 'N/A',
+            unit: event.unit || null,
+            source: event.source || 'FMP', // BOTH, FMP, ou UW
+            time: time,
+          };
+        });
       
       // Trier par date (croissant ou décroissant)
       validEvents.sort((a, b) => {
-        const dateA = new Date(a.date);
-        const dateB = new Date(b.date);
+        const dateA = new Date(a.date || 0);
+        const dateB = new Date(b.date || 0);
         if (filters.sortOrder === "desc") {
           return dateB - dateA; // Décroissant (plus récent en premier)
         } else {
@@ -213,10 +307,26 @@ function EconomicCalendar() {
         }
       });
       
+      console.log(`[EconomicCalendar] Loaded ${validEvents.length} valid economic events`);
+      
+      if (validEvents.length === 0 && data.length > 0) {
+        console.warn("[EconomicCalendar] Warning: Received data but no valid events after filtering");
+        setError("Aucun événement ne correspond aux filtres sélectionnés. Essayez de modifier les filtres.");
+      } else if (validEvents.length === 0) {
+        console.warn("[EconomicCalendar] Warning: No events received from API");
+        setError("Aucun événement économique disponible pour la période sélectionnée.");
+      }
+      
       setEvents(validEvents);
     } catch (err) {
-      console.error("Error loading economic calendar:", err);
-      setError(err.message || "Erreur lors du chargement du calendrier économique");
+      console.error("[EconomicCalendar] Error loading economic calendar:", err);
+      console.error("[EconomicCalendar] Error details:", {
+        message: err.message,
+        stack: err.stack,
+        response: err.response,
+      });
+      setError(err.message || "Erreur lors du chargement du calendrier économique. Vérifiez votre connexion et réessayez.");
+      setEvents([]);
     } finally {
       setLoading(false);
     }
@@ -295,17 +405,38 @@ function EconomicCalendar() {
         </Box>
 
         {loading ? (
-          <MDTypography variant="body2" color="text">
-            Chargement...
-          </MDTypography>
+          <MDBox textAlign="center" py={4}>
+            <MDTypography variant="body2" color="text">
+              Chargement des événements économiques...
+            </MDTypography>
+          </MDBox>
         ) : error ? (
-          <MDTypography variant="body2" color="error">
-            {error}
-          </MDTypography>
+          <MDBox p={3} sx={{ backgroundColor: "error.lighter", borderRadius: 1 }}>
+            <MDBox display="flex" alignItems="center" gap={1} mb={1}>
+              <Icon color="error">error</Icon>
+              <MDTypography variant="h6" color="error">
+                Erreur
+              </MDTypography>
+            </MDBox>
+            <MDTypography variant="body2" color="error">
+              {error}
+            </MDTypography>
+            <MDBox mt={2}>
+              <MDTypography variant="caption" color="text.secondary">
+                Vérifiez votre connexion internet et réessayez. Si le problème persiste, contactez le support.
+              </MDTypography>
+            </MDBox>
+          </MDBox>
         ) : events.length === 0 ? (
-          <MDTypography variant="body2" color="text">
-            Aucun événement économique prévu
-          </MDTypography>
+          <MDBox textAlign="center" py={4}>
+            <Icon sx={{ fontSize: 48, color: "text.secondary", mb: 2 }}>event_busy</Icon>
+            <MDTypography variant="h6" color="text.secondary" mb={1}>
+              Aucun événement économique prévu
+            </MDTypography>
+            <MDTypography variant="body2" color="text.secondary">
+              Essayez de modifier les filtres ou la période pour voir plus d&apos;événements.
+            </MDTypography>
+          </MDBox>
         ) : (
           <TableContainer sx={{ maxHeight: 600 }}>
             <Table stickyHeader>
@@ -337,7 +468,7 @@ function EconomicCalendar() {
               <TableBody>
                 {events.map((event, index) => (
                   <TableRow
-                    key={index}
+                    key={`event-${index}-${event.date}-${event.event}`}
                     sx={{
                       "&:hover": { backgroundColor: "action.hover" },
                     }}
@@ -345,29 +476,56 @@ function EconomicCalendar() {
                     <DataTableBodyCell align="left">
                       <MDBox>
                         <MDTypography variant="body2" fontWeight="medium">
-                          {economicCalendarService.formatEventDate(event.date, event.country)}
+                          {economicCalendarService.formatEventDate(
+                            event.time 
+                              ? `${event.date} ${event.time}` 
+                              : event.date, 
+                            event.country
+                          )}
                         </MDTypography>
                       </MDBox>
                     </DataTableBodyCell>
                     <DataTableBodyCell align="left">
                       <MDBox display="flex" alignItems="center" gap={0.5}>
                         <MDTypography variant="body2">
-                          {getCountryFlag(event.country)}
+                          {event.country && event.country !== 'N/A' ? getCountryFlag(event.country) : ''}
                         </MDTypography>
                         <MDTypography variant="body2">
-                          {event.country}
+                          {event.country && event.country !== 'N/A' ? event.country : 'N/A'}
                         </MDTypography>
                       </MDBox>
                     </DataTableBodyCell>
                     <DataTableBodyCell align="left">
-                      <MDTypography variant="body2" fontWeight="medium">
-                        {event.event}
-                      </MDTypography>
-                      {event.currency && (
-                        <MDTypography variant="caption" color="text.secondary">
-                          {event.currency}
+                      <MDBox>
+                        <MDTypography variant="body2" fontWeight="medium">
+                          {event.event}
                         </MDTypography>
-                      )}
+                        <MDBox display="flex" alignItems="center" gap={1} mt={0.5}>
+                          {event.currency && (
+                            <MDTypography variant="caption" color="text.secondary">
+                              {event.currency}
+                            </MDTypography>
+                          )}
+                          {event.source && (
+                            <Chip
+                              label={event.source}
+                              size="small"
+                              sx={{
+                                height: 18,
+                                fontSize: '0.65rem',
+                                '& .MuiChip-label': {
+                                  padding: '0 6px',
+                                },
+                              }}
+                              color={
+                                event.source === 'BOTH' ? 'success' :
+                                event.source === 'FMP' ? 'primary' :
+                                event.source === 'UW' ? 'secondary' : 'default'
+                              }
+                            />
+                          )}
+                        </MDBox>
+                      </MDBox>
                     </DataTableBodyCell>
                     <DataTableBodyCell align="right">
                       <MDTypography variant="body2" color="text.secondary">
@@ -421,7 +579,7 @@ function EconomicCalendar() {
                     </DataTableBodyCell>
                     <DataTableBodyCell align="center">
                       <Chip
-                        label={event.impact || "N/A"}
+                        label={event.impact && event.impact !== 'N/A' ? event.impact : "N/A"}
                         color={economicCalendarService.getImpactColor(
                           event.impact
                         )}

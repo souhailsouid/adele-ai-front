@@ -48,6 +48,9 @@ import {
 // Auth Context Provider
 import { AuthProvider, useAuth } from "/context/AuthContext";
 
+// Toast Notifications
+import ToastNotification from "/components/ToastNotification";
+
 // Images
 import favicon from "/assets/images/favicon.png";
 import avatar from "/avatar.jpg";
@@ -151,20 +154,14 @@ function Main({ Component, pageProps }) {
       <ThemeProvider theme={darkMode ? themeDarkRTL : themeRTL}>
         <CssBaseline />
         <Component {...pageProps} />
-        {layout === "dashboard" && (
-          <>
-            <Sidenav
-              color={sidenavColor}
-              brand={brandIcon}
-              brandName="Material Dashboard PRO"
-              routes={routes}
-              onMouseEnter={handleOnMouseEnter}
-              onMouseLeave={handleOnMouseLeave}
-            />
-            <Configurator />
-            {configsButton}
-          </>
-        )}
+        <ToastNotification />
+      {layout === "dashboard" && (
+        <>
+          {/* Sidenav désactivée */}
+          <Configurator />
+          {configsButton}
+        </>
+      )}
         {layout === "vr" && <Configurator />}
       </ThemeProvider>
     </CacheProvider>
@@ -172,16 +169,10 @@ function Main({ Component, pageProps }) {
     <ThemeProvider theme={darkMode ? themeDark : theme}>
       <CssBaseline />
       <Component {...pageProps} />
+      <ToastNotification />
       {layout === "dashboard" && (
         <>
-          <Sidenav
-            color={sidenavColor}
-            brand={brandIcon}
-            brandName="Adele.ai"
-            routes={routes}
-            onMouseEnter={handleOnMouseEnter}
-            onMouseLeave={handleOnMouseLeave}
-          />
+          {/* Sidenav désactivée */}
           <Configurator />
           {configsButton}
         </>

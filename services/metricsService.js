@@ -3,7 +3,7 @@
  * Track les performances des signaux, alertes et utilisation
  */
 
-import fmpClient from "/lib/fmp/client";
+import fmpUWClient from "/lib/api/fmpUnusualWhalesClient";
 
 export class MetricsService {
   constructor() {
@@ -202,7 +202,7 @@ export class MetricsService {
 
     try {
       // Récupérer le prix actuel
-      const quote = await fmpClient.getQuote(alertTrack.symbol);
+        const quote = await fmpUWClient.getFMPQuote(alertTrack.symbol);
       if (quote && quote.price) {
         const currentPrice = quote.price;
         const profit = currentPrice - alertTrack.priceAtTrigger;
