@@ -33,12 +33,6 @@ function AIInstitutionAnalysis() {
   const [allInstitutions, setAllInstitutions] = useState([]);
   const [period, setPeriod] = useState("3M");
 
-  // Vérifier l'authentification
-  if (!authLoading && !isAuthenticated()) {
-    router.push("/authentication/sign-in?redirect=/dashboards/trading/ai-institution-analysis");
-    return null;
-  }
-
   // Charger toutes les institutions pour l'Autocomplete
   useEffect(() => {
     const loadAllInstitutions = async () => {
@@ -87,6 +81,12 @@ function AIInstitutionAnalysis() {
   const institutionOptions = useMemo(() => {
     return searchInstitutions(institutionInput);
   }, [institutionInput, searchInstitutions]);
+
+  // Vérifier l'authentification après tous les hooks
+  if (!authLoading && !isAuthenticated()) {
+    router.push("/authentication/sign-in?redirect=/dashboards/trading/ai-institution-analysis");
+    return null;
+  }
 
   const handleSearch = () => {
     if (institutionName) {

@@ -3,7 +3,7 @@
  * Affiche TickerActivityAnalysis et OptionsFlowAnalysis
  */
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/router";
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
@@ -27,20 +27,13 @@ function AITickerAnalysis() {
   const [selectedTicker, setSelectedTicker] = useState(null);
   const [stockOptions, setStockOptions] = useState([]);
   const [firstAnalysisComplete, setFirstAnalysisComplete] = useState(false);
-  const tickerRef = useRef(null);
 
-  // Vérifier l'authentification
-  if (!authLoading && !isAuthenticated()) {
-    router.push("/authentication/sign-in?redirect=/dashboards/trading/ai-ticker-analysis");
-    return null;
-  }
-
+  // Tous les hooks doivent être appelés avant tout return conditionnel
   const handleSearch = useCallback((value) => {
     if (value && value.trim()) {
       const tickerUpper = value.trim().toUpperCase();
       setSelectedTicker(tickerUpper);
       setFirstAnalysisComplete(false); // Réinitialiser pour un nouveau ticker
-      tickerRef.current = tickerUpper;
     }
   }, []);
 
@@ -55,6 +48,12 @@ function AITickerAnalysis() {
   const handleSecondAnalysisComplete = useCallback((data) => {
     console.log("Options Flow Analysis completed:", data);
   }, []);
+
+  // Vérifier l'authentification après tous les hooks
+  if (!authLoading && !isAuthenticated()) {
+    router.push("/authentication/sign-in?redirect=/dashboards/trading/ai-ticker-analysis");
+    return null;
+  }
 
   const handleAutocompleteChange = (event, newValue) => {
     if (newValue) {

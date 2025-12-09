@@ -113,7 +113,7 @@ function SectorAnalysis() {
             Sector Analysis
           </MDTypography>
           <MDTypography variant="body2" color="text">
-            Analyse complète d'un secteur (Fundamentals + Sentiment)
+            Analyse complète d&apos;un secteur (Fundamentals + Sentiment)
           </MDTypography>
         </MDBox>
 

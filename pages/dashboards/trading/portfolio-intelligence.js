@@ -408,7 +408,7 @@ function PortfolioIntelligence() {
           <Card>
             <MDBox p={3} textAlign="center">
               <MDTypography variant="body2" color="text.secondary">
-                Ajoutez des tickers à votre portefeuille et cliquez sur "Analyser" pour voir les signaux
+                Ajoutez des tickers à votre portefeuille et cliquez sur &quot;Analyser&quot; pour voir les signaux
               </MDTypography>
             </MDBox>
           </Card>
