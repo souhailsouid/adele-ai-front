@@ -21,7 +21,7 @@ import ConfidenceBar from "./ConfidenceBar";
 import RecommendationCard from "./RecommendationCard";
 import DataTableHeadCell from "/examples/Tables/DataTable/DataTableHeadCell";
 import DataTableBodyCell from "/examples/Tables/DataTable/DataTableBodyCell";
-import { formatCurrency, formatPercentageage } from "/utils/formatting";
+import { formatCurrency, formatPercentage } from "/utils/formatting";
 
 function InstitutionMovesAnalysis({ institution_cik, institution_name, period = "3M", onAnalysisComplete }) {
   const [data, setData] = useState(null);
@@ -274,7 +274,7 @@ function InstitutionMovesAnalysis({ institution_cik, institution_name, period = 
                             color={move.change_pct >= 0 ? "success" : "error"}
                           >
                             {move.change_pct >= 0 ? "+" : ""}
-                            {formatPercentageage(move.change_pct)}
+                            {formatPercentage(move.change_pct)}
                           </MDTypography>
                         )}
                       </DataTableBodyCell>
