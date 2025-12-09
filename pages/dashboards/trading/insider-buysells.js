@@ -28,6 +28,7 @@ import Icon from "@mui/material/Icon";
 
 // Composants
 import InsiderBuySells from "/pagesComponents/dashboards/trading/components/InsiderBuySells";
+import withAuth from "/hocs/withAuth";
 
 function TradingInsiderBuySells() {
     const [activeTab, setActiveTab] = useState(0);
