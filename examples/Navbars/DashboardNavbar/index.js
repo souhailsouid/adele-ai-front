@@ -77,25 +77,8 @@ function DashboardNavbar({ absolute, light, isMini }) {
       setNavbarType("static");
     }
 
-    // A function that sets the transparent state of the navbar.
-    function handleTransparentNavbar() {
-      setTransparentNavbar(
-        dispatch,
-        (fixedNavbar && window.scrollY === 0) || !fixedNavbar
-      );
-    }
-
-    /** 
-     The event listener that's calling the handleTransparentNavbar function when 
-     scrolling the window.
-    */
-    window.addEventListener("scroll", handleTransparentNavbar);
-
-    // Call the handleTransparentNavbar function to set the state with the initial value.
-    handleTransparentNavbar();
-
-    // Remove event listener on cleanup
-    return () => window.removeEventListener("scroll", handleTransparentNavbar);
+    // Désactiver la transparence - toujours avoir un fond blanc solide
+    setTransparentNavbar(dispatch, false);
   }, [dispatch, fixedNavbar]);
 
   const handleMiniSidenav = () => setMiniSidenav(dispatch, !miniSidenav);
@@ -188,9 +171,15 @@ function DashboardNavbar({ absolute, light, isMini }) {
     functions: { rgba },
   }) => ({
     color: () => {
+      console.log("transparentNavbar", transparentNavbar);
       let colorValue = light || darkMode ? white.main : dark.main;
 
       if (transparentNavbar && !light) {
+        console.log("transparentNavbar and !light", transparentNavbar, !light);
+        console.log("darkMode", darkMode);
+        console.log('colorValue', colorValue);
+        console.log("rgba(text.main, 0.6)", rgba(text.main, 0.6));
+        console.log("text.main", text.main);
         colorValue = darkMode ? rgba(text.main, 0.6) : text.main;
       }
 

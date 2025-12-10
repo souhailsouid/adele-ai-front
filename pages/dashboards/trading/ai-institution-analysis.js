@@ -19,7 +19,7 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
-import unusualWhalesClient from "/lib/unusual-whales/client";
+import fmpUWClient2 from "/lib/api/fmpUWClient2";
 import { useAuth } from "/hooks/useAuth";
 import withAuth from "/hocs/withAuth";
 import { InstitutionMovesAnalysis } from "/pagesComponents/dashboards/trading/components/ai";
@@ -43,7 +43,7 @@ function AIInstitutionAnalysis() {
           order_direction: "desc",
         };
 
-        const data = await unusualWhalesClient.getInstitutions(params).catch((err) => {
+        const data = await fmpUWClient2.getUWInstitutions(params).catch((err) => {
           console.error("Error loading all institutions:", err);
           return { data: [] };
         });

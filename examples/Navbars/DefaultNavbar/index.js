@@ -536,6 +536,7 @@ function DefaultNavbar({ routes, brand, transparent, light, action }) {
   return (
     <Container>
       <MDBox
+        
         py={1}
         px={{ xs: 4, sm: transparent ? 2 : 3, lg: transparent ? 0 : 2 }}
         my={3}
@@ -643,6 +644,7 @@ function DefaultNavbar({ routes, brand, transparent, light, action }) {
         </MDBox>
       </MDBox>
       {dropdownMenu}
+
       {nestedDropdownMenu}
     </Container>
   );

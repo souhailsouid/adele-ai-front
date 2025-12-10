@@ -111,6 +111,8 @@ export const POPULAR_STOCKS = [
   { symbol: "NSRGY", name: "Nestlé S.A." },
   { symbol: "ASML", name: "ASML Holding N.V." },
   { symbol: "TSM", name: "Taiwan Semiconductor Manufacturing Company Limited" },
+  { symbol: "TCEHY", name: "Tencent Holdings Limited" },
+  { symbol: "AVGO", name: "Broadcom Inc." },
 ];
 
 /**

@@ -24,14 +24,11 @@ function navbar(theme, ownerState) {
 
   return {
     boxShadow: transparentNavbar || absolute ? "none" : navbarBoxShadow,
-    backdropFilter:
-      transparentNavbar || absolute
-        ? "none"
-        : `saturate(200%) blur(${pxToRem(30)})`,
+    backdropFilter: "none", // Désactiver le blur
     backgroundColor:
       transparentNavbar || absolute
         ? `${transparent.main} !important`
-        : rgba(darkMode ? background.default : white.main, 0.8),
+        : darkMode ? background.default : white.main, // Fond blanc solide (opacité 1.0)
 
     color: () => {
       let color;

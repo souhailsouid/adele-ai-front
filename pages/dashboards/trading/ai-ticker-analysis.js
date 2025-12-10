@@ -3,7 +3,7 @@
  * Affiche TickerActivityAnalysis et OptionsFlowAnalysis
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/router";
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
@@ -15,9 +15,11 @@ import Footer from "/examples/Footer";
 import MDInput from "/components/MDInput";
 import MDButton from "/components/MDButton";
 import Autocomplete from "@mui/material/Autocomplete";
-import { searchStocks } from "/config/stockSymbols";
+import { searchStocks, POPULAR_STOCKS } from "/config/stockSymbols";
+
 import { useAuth } from "/hooks/useAuth";
 import withAuth from "/hocs/withAuth";
+import fmpUWClient2 from "/lib/api/fmpUWClient2";
 import { 
   TickerActivityAnalysis,
   TickerOptionsAnalysis,
@@ -31,23 +33,97 @@ function AITickerAnalysis() {
   const [ticker, setTicker] = useState("");
   const [selectedTicker, setSelectedTicker] = useState(null);
   const [stockOptions, setStockOptions] = useState([]);
+  const [allTickers, setAllTickers] = useState([]);
+  const [loadingTickers, setLoadingTickers] = useState(false);
   const [firstAnalysisComplete, setFirstAnalysisComplete] = useState(false);
   const [secondAnalysisComplete, setSecondAnalysisComplete] = useState(false);
   const [thirdAnalysisComplete, setThirdAnalysisComplete] = useState(false);
   const [fourthAnalysisComplete, setFourthAnalysisComplete] = useState(false);
 
+  // Charger la liste de tickers depuis l'API au montage
+  useEffect(() => {
+    const loadTickers = async () => {
+      try {
+        setLoadingTickers(true);
+        // Récupérer les top tickers par net premium (tickers les plus actifs)
+        const topTickers = await fmpUWClient2.getUWTopNetImpact({ limit: 500 }).catch(() => []);
+        
+        // Extraire les tickers uniques
+        const tickerSet = new Set();
+        const tickerList = [];
+        
+        // Ajouter d'abord les tickers populaires de la config (POPULAR_STOCKS)
+        POPULAR_STOCKS.forEach(stock => {
+          if (!tickerSet.has(stock.symbol)) {
+            tickerSet.add(stock.symbol);
+            tickerList.push({
+              symbol: stock.symbol,
+              name: stock.name || stock.symbol
+            });
+          }
+        });
+        
+        // Ajouter aussi les tickers de searchStocks (qui peut contenir plus de tickers)
+        searchStocks("").forEach(stock => {
+          if (!tickerSet.has(stock.symbol)) {
+            tickerSet.add(stock.symbol);
+            tickerList.push({
+              symbol: stock.symbol,
+              name: stock.name || stock.symbol
+            });
+          }
+        });
+        
+        // Ajouter les tickers de l'API (top net impact)
+        const extractTickers = (data) => {
+          if (Array.isArray(data)) return data;
+          if (data?.data && Array.isArray(data.data)) return data.data;
+          return [];
+        };
+        
+        extractTickers(topTickers).forEach(item => {
+          const tickerSymbol = item.ticker_symbol || item.ticker || item.symbol;
+          if (tickerSymbol && !tickerSet.has(tickerSymbol)) {
+            tickerSet.add(tickerSymbol);
+            tickerList.push({
+              symbol: tickerSymbol,
+              name: item.name || item.company_name || tickerSymbol
+            });
+          }
+        });
+        
+        setAllTickers(tickerList);
+      } catch (err) {
+        console.error("Error loading tickers:", err);
+        // En cas d'erreur, utiliser la liste locale
+        const localTickers = searchStocks("").map(stock => ({
+          symbol: stock.symbol,
+          name: stock.name || stock.symbol
+        }));
+        setAllTickers(localTickers);
+      } finally {
+        setLoadingTickers(false);
+      }
+    };
+    
+    loadTickers();
+  }, []);
+
   // Tous les hooks doivent être appelés avant tout return conditionnel
   const handleSearch = useCallback((value) => {
     if (value && value.trim()) {
       const tickerUpper = value.trim().toUpperCase();
-      setSelectedTicker(tickerUpper);
-      // Réinitialiser tous les états pour un nouveau ticker
-      setFirstAnalysisComplete(false);
-      setSecondAnalysisComplete(false);
-      setThirdAnalysisComplete(false);
-      setFourthAnalysisComplete(false);
+      // Si le ticker change, réinitialiser tous les états
+      if (selectedTicker !== tickerUpper) {
+        setSelectedTicker(tickerUpper);
+        // Réinitialiser tous les états pour un nouveau ticker
+        setFirstAnalysisComplete(false);
+        setSecondAnalysisComplete(false);
+        setThirdAnalysisComplete(false);
+        setFourthAnalysisComplete(false);
+      }
     }
-  }, []);
+  }, [selectedTicker]);
 
   const handleFirstAnalysisComplete = useCallback((data) => {
     console.log("Ticker Activity Analysis completed:", data);
@@ -77,13 +153,27 @@ function AITickerAnalysis() {
     console.log("Ticker News Events Analysis completed:", data);
   }, []);
 
-  // Vérifier l'authentification après tous les hooks
-  if (!authLoading && !isAuthenticated()) {
-    router.push("/authentication/sign-in?redirect=/dashboards/trading/ai-ticker-analysis");
-    return null;
-  }
+  // Options filtrées pour l'autocomplete
+  const filteredStockOptions = useMemo(() => {
+    if (!ticker || ticker.trim().length < 1) {
+      return allTickers.slice(0, 50); // Afficher les 50 premiers par défaut
+    }
+    
+    const searchTerm = ticker.trim().toUpperCase();
+    return allTickers
+      .filter(stock => {
+        const symbol = (stock.symbol || "").toUpperCase();
+        const name = (stock.name || "").toUpperCase();
+        return symbol.includes(searchTerm) || name.includes(searchTerm);
+      })
+      .slice(0, 50); // Limiter à 50 résultats
+  }, [ticker, allTickers]);
 
-  const handleAutocompleteChange = (event, newValue) => {
+  const handleInputChange = (event, newInputValue) => {
+    setTicker(newInputValue);
+  };
+
+  const handleAutocompleteChange = useCallback((event, newValue) => {
     if (newValue) {
       const tickerValue = typeof newValue === "string" ? newValue : newValue.symbol || newValue.value || "";
       setTicker(tickerValue);
@@ -91,17 +181,13 @@ function AITickerAnalysis() {
         handleSearch(tickerValue);
       }
     }
-  };
+  }, [handleSearch]);
 
-  const handleInputChange = (event, newInputValue) => {
-    setTicker(newInputValue);
-    if (newInputValue && newInputValue.length >= 1) {
-      const results = searchStocks(newInputValue);
-      setStockOptions(results.slice(0, 20));
-    } else {
-      setStockOptions([]);
-    }
-  };
+  // Vérifier l'authentification après tous les hooks
+  if (!authLoading && !isAuthenticated()) {
+    router.push("/authentication/sign-in?redirect=/dashboards/trading/ai-ticker-analysis");
+    return null;
+  }
 
   return (
     <DashboardLayout>
@@ -123,10 +209,11 @@ function AITickerAnalysis() {
               <Grid item xs={12} md={8}>
                 <Autocomplete
                   freeSolo
-                  options={stockOptions}
+                  options={filteredStockOptions}
                   value={ticker}
                   onInputChange={handleInputChange}
                   onChange={handleAutocompleteChange}
+                  loading={loadingTickers}
                   getOptionLabel={(option) => {
                     if (typeof option === "string") return option;
                     return option.symbol || option.value || option.label || "";
@@ -137,7 +224,7 @@ function AITickerAnalysis() {
                         <MDTypography variant="body2" fontWeight="bold">
                           {typeof option === "string" ? option : option.symbol || option.value}
                         </MDTypography>
-                        {typeof option === "object" && option.name && (
+                        {typeof option === "object" && option.name && option.name !== option.symbol && (
                           <MDTypography variant="caption" color="text.secondary">
                             {option.name}
                           </MDTypography>

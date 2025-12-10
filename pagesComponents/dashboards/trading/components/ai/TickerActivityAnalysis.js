@@ -19,6 +19,14 @@ function TickerActivityAnalysis({ ticker, onAnalysisComplete }) {
   const [error, setError] = useState(null);
   const [hasLoaded, setHasLoaded] = useState(false);
 
+  // Réinitialiser quand le ticker change
+  useEffect(() => {
+    setHasLoaded(false);
+    setData(null);
+    setError(null);
+    setLoading(false);
+  }, [ticker]);
+
   useEffect(() => {
     if (!ticker || hasLoaded) return;
 
@@ -52,14 +60,8 @@ function TickerActivityAnalysis({ ticker, onAnalysisComplete }) {
     };
 
     loadAnalysis();
-  }, [ticker]); // Retirer onAnalysisComplete des dépendances
-
-  // Réinitialiser quand le ticker change
-  useEffect(() => {
-    setHasLoaded(false);
-    setData(null);
-    setError(null);
-  }, [ticker]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ticker, hasLoaded]); // onAnalysisComplete est optionnel et peut changer souvent
 
   if (loading) {
     return (
@@ -113,7 +115,7 @@ function TickerActivityAnalysis({ ticker, onAnalysisComplete }) {
         {/* Overview */}
         <MDBox mb={3}>
           <MDTypography variant="h6" fontWeight="medium" mb={1}>
-            Vue d'ensemble
+            Vue d&apos;ensemble
           </MDTypography>
           <MDTypography variant="body2" color="text" sx={{ lineHeight: 1.8 }}>
             {analysis.overview}

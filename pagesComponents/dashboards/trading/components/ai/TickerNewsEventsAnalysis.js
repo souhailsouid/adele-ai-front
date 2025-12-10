@@ -20,6 +20,14 @@ function TickerNewsEventsAnalysis({ ticker, onAnalysisComplete }) {
   const [error, setError] = useState(null);
   const [hasLoaded, setHasLoaded] = useState(false);
 
+  // Réinitialiser quand le ticker change
+  useEffect(() => {
+    setHasLoaded(false);
+    setData(null);
+    setError(null);
+    setLoading(false);
+  }, [ticker]);
+
   useEffect(() => {
     if (!ticker || hasLoaded) return;
 
@@ -52,13 +60,7 @@ function TickerNewsEventsAnalysis({ ticker, onAnalysisComplete }) {
     };
 
     loadAnalysis();
-  }, [ticker]);
-
-  useEffect(() => {
-    setHasLoaded(false);
-    setData(null);
-    setError(null);
-  }, [ticker]);
+  }, [ticker, hasLoaded]); // Ajouter hasLoaded pour éviter les rechargements multiples
 
   if (loading) {
     return (
