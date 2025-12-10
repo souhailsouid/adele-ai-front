@@ -320,7 +320,7 @@ function AlertsManagement() {
 
         {alerts.length === 0 && !loading && !error && (
           <Alert severity="info">
-            Aucune alerte. Cliquez sur &quot;Nouvelle Alerte&quot; pour en créer une.
+            Aucune alerte. Cliquez sur {`"`}Nouvelle Alerte{`"`} pour en créer une.
           </Alert>
         )}
 
@@ -469,7 +469,7 @@ function AlertsManagement() {
         {/* Dialog de test */}
         {testingAlert && (
           <Dialog open={!!testingAlert} onClose={() => setTestingAlert(null)} maxWidth="sm" fullWidth>
-            <DialogTitle>Tester l&apos;alerte: {testingAlert.name}</DialogTitle>
+            <DialogTitle>Tester l{`'`}alerte: {testingAlert.name}</DialogTitle>
             <DialogContent>
               {testResult ? (
                 <MDBox pt={2}>

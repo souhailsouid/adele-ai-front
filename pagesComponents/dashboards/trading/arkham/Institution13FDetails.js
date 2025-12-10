@@ -63,45 +63,110 @@ function Institution13FDetails({ open, onClose, filing }) {
       setActivity([]);
       setError(null);
     }
-  }, [open, filing]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, filing?.cik, filing?.reportDate, filing?.report_date]);
 
   const loadData = async () => {
-    if (!filing || !filing.cik) return;
+    if (!filing || !filing.cik) {
+      console.warn("[Institution13FDetails] No filing or CIK provided:", filing);
+      return;
+    }
+
+    // Vérifier que le client API est bien configuré
+    if (!fmpUWClient2 || !fmpUWClient2.baseUrl) {
+      const errorMsg = "API client not configured. NEXT_PUBLIC_API_URL_2 is missing.";
+      console.error("[Institution13FDetails]", errorMsg);
+      setError(errorMsg);
+      setLoading(false);
+      return;
+    }
 
     try {
       setLoading(true);
       setError(null);
 
       // Le CIK sera normalisé par la méthode API (format 10 chiffres avec zéros en tête)
-      const cik = String(filing.cik).trim();
-      const reportDate = filing.reportDate || filing.report_date;
+      const cik = String(filing.cik).trim().padStart(10, '0');
+      const reportDate = filing.reportDate || filing.report_date || filing.filingDate || filing.filing_date;
+
+      console.log("[Institution13FDetails] Loading data for CIK:", cik, "Report Date:", reportDate);
+      console.log("[Institution13FDetails] API Base URL:", fmpUWClient2.baseUrl);
 
       // Charger les holdings et l'activité en parallèle
       const [holdingsData, activityData] = await Promise.allSettled([
         fmpUWClient2.getUWInstitutionHoldingsByCIK(cik, {
-        //   date: reportDate,
           limit: 100,
           order: "value",
           order_direction: "desc",
-        }).catch(() => []),
+        }).catch((err) => {
+          console.error("[Institution13FDetails] Error loading holdings:", err);
+          console.error("[Institution13FDetails] Holdings error details:", {
+            message: err.message,
+            stack: err.stack,
+            cik,
+            baseUrl: fmpUWClient2.baseUrl,
+          });
+          throw err; // Re-throw pour que Promise.allSettled capture l'erreur
+        }),
         fmpUWClient2.getUWInstitutionActivityByCIK(cik, {
-          date: reportDate,
+          ...(reportDate ? { date: reportDate } : {}),
           limit: 100,
-        }).catch(() => []),
+        }).catch((err) => {
+          console.error("[Institution13FDetails] Error loading activity:", err);
+          console.error("[Institution13FDetails] Activity error details:", {
+            message: err.message,
+            stack: err.stack,
+            cik,
+            reportDate,
+            baseUrl: fmpUWClient2.baseUrl,
+          });
+          throw err; // Re-throw pour que Promise.allSettled capture l'erreur
+        }),
       ]);
+
+      console.log("[Institution13FDetails] Holdings promise status:", holdingsData.status);
+      console.log("[Institution13FDetails] Activity promise status:", activityData.status);
 
       if (holdingsData.status === "fulfilled") {
         const data = holdingsData.value;
-        setHoldings(Array.isArray(data) ? data : (data?.data || []));
+        const holdingsArray = Array.isArray(data) ? data : (data?.data || []);
+        console.log("[Institution13FDetails] Setting holdings:", holdingsArray.length, "items");
+        setHoldings(holdingsArray);
+      } else {
+        const reason = holdingsData.reason;
+        console.error("[Institution13FDetails] Holdings request failed:", reason);
+        console.error("[Institution13FDetails] Holdings failure details:", {
+          message: reason?.message,
+          stack: reason?.stack,
+        });
+        setHoldings([]);
+        if (!error) {
+          setError(`Erreur lors du chargement des holdings: ${reason?.message || "Unknown error"}`);
+        }
       }
 
       if (activityData.status === "fulfilled") {
         const data = activityData.value;
-        setActivity(Array.isArray(data) ? data : (data?.data || []));
+        const activityArray = Array.isArray(data) ? data : (data?.data || []);
+        console.log("[Institution13FDetails] Setting activity:", activityArray.length, "items");
+        setActivity(activityArray);
+      } else {
+        const reason = activityData.reason;
+        console.error("[Institution13FDetails] Activity request failed:", reason);
+        console.error("[Institution13FDetails] Activity failure details:", {
+          message: reason?.message,
+          stack: reason?.stack,
+        });
+        setActivity([]);
+        if (!error) {
+          setError(`Erreur lors du chargement de l'activité: ${reason?.message || "Unknown error"}`);
+        }
       }
     } catch (err) {
-      console.error("Error loading 13F details:", err);
+      console.error("[Institution13FDetails] Unexpected error loading 13F details:", err);
       setError(err.message || "Erreur lors du chargement des données");
+      setHoldings([]);
+      setActivity([]);
     } finally {
       setLoading(false);
     }

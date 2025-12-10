@@ -18,7 +18,12 @@ import Autocomplete from "@mui/material/Autocomplete";
 import { searchStocks } from "/config/stockSymbols";
 import { useAuth } from "/hooks/useAuth";
 import withAuth from "/hocs/withAuth";
-import { OptionsFlowAnalysis, TickerActivityAnalysis } from "/pagesComponents/dashboards/trading/components/ai";
+import { 
+  TickerActivityAnalysis,
+  TickerOptionsAnalysis,
+  TickerInstitutionalAnalysis,
+  TickerNewsEventsAnalysis
+} from "/pagesComponents/dashboards/trading/components/ai";
 
 function AITickerAnalysis() {
   const router = useRouter();
@@ -27,13 +32,20 @@ function AITickerAnalysis() {
   const [selectedTicker, setSelectedTicker] = useState(null);
   const [stockOptions, setStockOptions] = useState([]);
   const [firstAnalysisComplete, setFirstAnalysisComplete] = useState(false);
+  const [secondAnalysisComplete, setSecondAnalysisComplete] = useState(false);
+  const [thirdAnalysisComplete, setThirdAnalysisComplete] = useState(false);
+  const [fourthAnalysisComplete, setFourthAnalysisComplete] = useState(false);
 
   // Tous les hooks doivent être appelés avant tout return conditionnel
   const handleSearch = useCallback((value) => {
     if (value && value.trim()) {
       const tickerUpper = value.trim().toUpperCase();
       setSelectedTicker(tickerUpper);
-      setFirstAnalysisComplete(false); // Réinitialiser pour un nouveau ticker
+      // Réinitialiser tous les états pour un nouveau ticker
+      setFirstAnalysisComplete(false);
+      setSecondAnalysisComplete(false);
+      setThirdAnalysisComplete(false);
+      setFourthAnalysisComplete(false);
     }
   }, []);
 
@@ -46,7 +58,23 @@ function AITickerAnalysis() {
   }, []);
 
   const handleSecondAnalysisComplete = useCallback((data) => {
-    console.log("Options Flow Analysis completed:", data);
+    console.log("Ticker Options Analysis completed:", data);
+    // Attendre 2 secondes avant de lancer la troisième
+    setTimeout(() => {
+      setSecondAnalysisComplete(true);
+    }, 2000);
+  }, []);
+
+  const handleThirdAnalysisComplete = useCallback((data) => {
+    console.log("Ticker Institutional Analysis completed:", data);
+    // Attendre 2 secondes avant de lancer la quatrième
+    setTimeout(() => {
+      setThirdAnalysisComplete(true);
+    }, 2000);
+  }, []);
+
+  const handleFourthAnalysisComplete = useCallback((data) => {
+    console.log("Ticker News Events Analysis completed:", data);
   }, []);
 
   // Vérifier l'authentification après tous les hooks
@@ -159,9 +187,26 @@ function AITickerAnalysis() {
             </Grid>
             {firstAnalysisComplete && (
               <Grid item xs={12}>
-                <OptionsFlowAnalysis
+                <TickerOptionsAnalysis
                   ticker={selectedTicker}
+                  delay={2000}
                   onAnalysisComplete={handleSecondAnalysisComplete}
+                />
+              </Grid>
+            )}
+            {secondAnalysisComplete && (
+              <Grid item xs={12}>
+                <TickerInstitutionalAnalysis
+                  ticker={selectedTicker}
+                  onAnalysisComplete={handleThirdAnalysisComplete}
+                />
+              </Grid>
+            )}
+            {thirdAnalysisComplete && (
+              <Grid item xs={12}>
+                <TickerNewsEventsAnalysis
+                  ticker={selectedTicker}
+                  onAnalysisComplete={handleFourthAnalysisComplete}
                 />
               </Grid>
             )}

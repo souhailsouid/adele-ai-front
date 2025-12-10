@@ -200,7 +200,19 @@ function TradingOverviewDashboard() {
               data={latestFilings}
               loading={loading}
               onFilingClick={(filing) => {
-                setSelectedFiling(filing);
+                // S'assurer que le filing contient toutes les propriétés nécessaires
+                const normalizedFiling = {
+                  ...filing,
+                  cik: filing.cik || filing.ciK || "N/A",
+                  institutionName: filing.institutionName || filing.name || filing.short_name || "N/A",
+                  reportDate: filing.reportDate || filing.report_date || filing.filingDate || filing.filing_date || null,
+                  report_date: filing.report_date || filing.reportDate || filing.filingDate || filing.filing_date || null,
+                  filingDate: filing.filingDate || filing.filing_date || filing.reportDate || filing.report_date || null,
+                  filing_date: filing.filing_date || filing.filingDate || filing.reportDate || filing.report_date || null,
+                  formType: filing.formType || filing.form_type || "13F-HR",
+                };
+                console.log("[overview-dashboard] Filing clicked:", normalizedFiling);
+                setSelectedFiling(normalizedFiling);
                 setDetailsOpen(true);
               }}
             />

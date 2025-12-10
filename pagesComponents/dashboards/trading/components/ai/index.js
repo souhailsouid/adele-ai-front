@@ -9,4 +9,7 @@ export { default as RecommendationCard } from "./RecommendationCard";
 export { default as OptionsFlowAnalysis } from "./OptionsFlowAnalysis";
 export { default as InstitutionMovesAnalysis } from "./InstitutionMovesAnalysis";
 export { default as TickerActivityAnalysis } from "./TickerActivityAnalysis";
+export { default as TickerOptionsAnalysis } from "./TickerOptionsAnalysis";
+export { default as TickerInstitutionalAnalysis } from "./TickerInstitutionalAnalysis";
+export { default as TickerNewsEventsAnalysis } from "./TickerNewsEventsAnalysis";
 

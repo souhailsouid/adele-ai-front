@@ -111,7 +111,7 @@ function EarningsPrediction() {
             Earnings Prediction
           </MDTypography>
           <MDTypography variant="body2" color="text">
-            Prédiction de surprise d&apos;earnings basée sur options, insiders, dark pool et analystes
+            Prédiction de surprise d{`'`}earnings basée sur options, insiders, dark pool et analystes
           </MDTypography>
         </MDBox>
 

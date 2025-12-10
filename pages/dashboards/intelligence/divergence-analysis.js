@@ -93,7 +93,7 @@ function DivergenceAnalysis() {
             Divergence Analysis
           </MDTypography>
           <MDTypography variant="body2" color="text">
-            Détection d&apos;opportunités d&apos;arbitrage fundamentals vs sentiment
+            Détection d{`'`}opportunités d{`'`}arbitrage fundamentals vs sentiment
           </MDTypography>
         </MDBox>
 
