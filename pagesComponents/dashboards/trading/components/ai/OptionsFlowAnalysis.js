@@ -274,7 +274,7 @@ function OptionsFlowAnalysis({ ticker, onAnalysisComplete, delay = 0 }) {
                         Plus Grande Transaction
                       </MDTypography>
                       <MDTypography variant="body2" color="text.secondary" mb={0.5}>
-                        Taille: {formatCurrency(metrics.biggest_trade.size || 0)}
+                        Taille: {formatVolume(metrics.biggest_trade.size || 0)} contrats
                       </MDTypography>
                       <MDBox display="flex" alignItems="center" gap={1} mb={0.5}>
                         <Chip
@@ -404,7 +404,7 @@ function OptionsFlowAnalysis({ ticker, onAnalysisComplete, delay = 0 }) {
                 </MDTypography>
                 <Grid container spacing={2}>
                   {/* Volume Profile by Strike */}
-                  {metrics.volume_profile.by_strike && metrics.volume_profile.by_strike.length > 0 && (
+                  {metrics.volume_profile && metrics.volume_profile.by_strike && Array.isArray(metrics.volume_profile.by_strike) && metrics.volume_profile.by_strike.length > 0 && (
                     <Grid item xs={12} md={6}>
                       <Card variant="outlined">
                         <MDBox p={2}>
@@ -421,17 +421,20 @@ function OptionsFlowAnalysis({ ticker, onAnalysisComplete, delay = 0 }) {
                                 </TableRow>
                               </MDBox>
                               <TableBody>
-                                {metrics.volume_profile.by_strike.slice(0, 10).map((item, idx) => (
-                                  <TableRow key={idx}>
-                                    <DataTableBodyCell>${item.strike}</DataTableBodyCell>
-                                    <DataTableBodyCell align="right" color="success">
-                                      {formatVolume(item.call_volume || 0)}
-                                    </DataTableBodyCell>
-                                    <DataTableBodyCell align="right" color="error">
-                                      {formatVolume(item.put_volume || 0)}
-                                    </DataTableBodyCell>
-                                  </TableRow>
-                                ))}
+                                {metrics.volume_profile.by_strike
+                                  .sort((a, b) => parseFloat(a.strike || 0) - parseFloat(b.strike || 0))
+                                  .slice(0, 10)
+                                  .map((item, idx) => (
+                                    <TableRow key={idx}>
+                                      <DataTableBodyCell>${item.strike}</DataTableBodyCell>
+                                      <DataTableBodyCell align="right" color="success">
+                                        {formatVolume(item.call_volume || 0)}
+                                      </DataTableBodyCell>
+                                      <DataTableBodyCell align="right" color="error">
+                                        {formatVolume(item.put_volume || 0)}
+                                      </DataTableBodyCell>
+                                    </TableRow>
+                                  ))}
                               </TableBody>
                             </Table>
                           </TableContainer>
@@ -441,7 +444,7 @@ function OptionsFlowAnalysis({ ticker, onAnalysisComplete, delay = 0 }) {
                   )}
 
                   {/* Volume Profile by Expiry */}
-                  {metrics.volume_profile.by_expiry && metrics.volume_profile.by_expiry.length > 0 && (
+                  {metrics.volume_profile && metrics.volume_profile.by_expiry && Array.isArray(metrics.volume_profile.by_expiry) && metrics.volume_profile.by_expiry.length > 0 && (
                     <Grid item xs={12} md={6}>
                       <Card variant="outlined">
                         <MDBox p={2}>
@@ -458,19 +461,21 @@ function OptionsFlowAnalysis({ ticker, onAnalysisComplete, delay = 0 }) {
                                 </TableRow>
                               </MDBox>
                               <TableBody>
-                                {metrics.volume_profile.by_expiry.map((item, idx) => (
-                                  <TableRow key={idx}>
-                                    <DataTableBodyCell>
-                                      {new Date(item.expiry).toLocaleDateString("fr-FR")}
-                                    </DataTableBodyCell>
-                                    <DataTableBodyCell align="right" fontWeight="bold">
-                                      {formatVolume(item.total_volume || 0)}
-                                    </DataTableBodyCell>
-                                    <DataTableBodyCell align="right">
-                                      {(item.call_ratio * 100).toFixed(1)}%
-                                    </DataTableBodyCell>
-                                  </TableRow>
-                                ))}
+                                {metrics.volume_profile.by_expiry
+                                  .sort((a, b) => new Date(a.expiry || 0) - new Date(b.expiry || 0))
+                                  .map((item, idx) => (
+                                    <TableRow key={idx}>
+                                      <DataTableBodyCell>
+                                        {new Date(item.expiry).toLocaleDateString("fr-FR")}
+                                      </DataTableBodyCell>
+                                      <DataTableBodyCell align="right" fontWeight="bold">
+                                        {formatVolume(item.total_volume || 0)}
+                                      </DataTableBodyCell>
+                                      <DataTableBodyCell align="right">
+                                        {((item.call_ratio || 0) * 100).toFixed(1)}%
+                                      </DataTableBodyCell>
+                                    </TableRow>
+                                  ))}
                               </TableBody>
                             </Table>
                           </TableContainer>

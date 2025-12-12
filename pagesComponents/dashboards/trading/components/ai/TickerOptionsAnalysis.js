@@ -318,7 +318,7 @@ function TickerOptionsAnalysis({ ticker, onAnalysisComplete, delay = 0 }) {
               )}
 
               {/* Volume Profile by Strike */}
-              {metrics.volume_profile && metrics.volume_profile.by_strike && (
+              {metrics.volume_profile && metrics.volume_profile.by_strike && Array.isArray(metrics.volume_profile.by_strike) && (
                 <Grid item xs={12} md={6}>
                   <Card variant="outlined">
                     <MDBox p={2}>
@@ -330,17 +330,23 @@ function TickerOptionsAnalysis({ ticker, onAnalysisComplete, delay = 0 }) {
                           <MDBox component="thead">
                             <TableRow>
                               <DataTableHeadCell sx={{ fontSize: "0.7rem", py: 0.5 }}>Strike</DataTableHeadCell>
-                              <DataTableHeadCell sx={{ fontSize: "0.7rem", py: 0.5 }} align="right">Volume</DataTableHeadCell>
+                              <DataTableHeadCell sx={{ fontSize: "0.7rem", py: 0.5 }} align="right">Calls</DataTableHeadCell>
+                              <DataTableHeadCell sx={{ fontSize: "0.7rem", py: 0.5 }} align="right">Puts</DataTableHeadCell>
                             </TableRow>
                           </MDBox>
                           <TableBody>
-                            {Object.entries(metrics.volume_profile.by_strike)
-                              .sort(([a], [b]) => parseFloat(a) - parseFloat(b))
+                            {metrics.volume_profile.by_strike
+                              .sort((a, b) => parseFloat(a.strike || 0) - parseFloat(b.strike || 0))
                               .slice(0, 10)
-                              .map(([strike, volume]) => (
-                                <TableRow key={strike}>
-                                  <DataTableBodyCell sx={{ fontSize: "0.7rem", py: 0.5 }}>{formatCurrency(parseFloat(strike))}</DataTableBodyCell>
-                                  <DataTableBodyCell sx={{ fontSize: "0.7rem", py: 0.5 }} align="right">{formatVolume(volume)}</DataTableBodyCell>
+                              .map((item, idx) => (
+                                <TableRow key={idx}>
+                                  <DataTableBodyCell sx={{ fontSize: "0.7rem", py: 0.5 }}>${item.strike}</DataTableBodyCell>
+                                  <DataTableBodyCell sx={{ fontSize: "0.7rem", py: 0.5 }} align="right" color="success">
+                                    {formatVolume(item.call_volume || 0)}
+                                  </DataTableBodyCell>
+                                  <DataTableBodyCell sx={{ fontSize: "0.7rem", py: 0.5 }} align="right" color="error">
+                                    {formatVolume(item.put_volume || 0)}
+                                  </DataTableBodyCell>
                                 </TableRow>
                               ))}
                           </TableBody>
@@ -352,7 +358,7 @@ function TickerOptionsAnalysis({ ticker, onAnalysisComplete, delay = 0 }) {
               )}
 
               {/* Volume Profile by Expiry */}
-              {metrics.volume_profile && metrics.volume_profile.by_expiry && (
+              {metrics.volume_profile && metrics.volume_profile.by_expiry && Array.isArray(metrics.volume_profile.by_expiry) && (
                 <Grid item xs={12} md={6}>
                   <Card variant="outlined">
                     <MDBox p={2}>
@@ -364,17 +370,25 @@ function TickerOptionsAnalysis({ ticker, onAnalysisComplete, delay = 0 }) {
                           <MDBox component="thead">
                             <TableRow>
                               <DataTableHeadCell sx={{ fontSize: "0.7rem", py: 0.5 }}>Expiry</DataTableHeadCell>
-                              <DataTableHeadCell sx={{ fontSize: "0.7rem", py: 0.5 }} align="right">Volume</DataTableHeadCell>
+                              <DataTableHeadCell sx={{ fontSize: "0.7rem", py: 0.5 }} align="right">Volume Total</DataTableHeadCell>
+                              <DataTableHeadCell sx={{ fontSize: "0.7rem", py: 0.5 }} align="right">Call Ratio</DataTableHeadCell>
                             </TableRow>
                           </MDBox>
                           <TableBody>
-                            {Object.entries(metrics.volume_profile.by_expiry)
-                              .sort(([a], [b]) => new Date(a) - new Date(b))
+                            {metrics.volume_profile.by_expiry
+                              .sort((a, b) => new Date(a.expiry || 0) - new Date(b.expiry || 0))
                               .slice(0, 10)
-                              .map(([expiry, volume]) => (
-                                <TableRow key={expiry}>
-                                  <DataTableBodyCell sx={{ fontSize: "0.7rem", py: 0.5 }}>{new Date(expiry).toLocaleDateString("fr-FR")}</DataTableBodyCell>
-                                  <DataTableBodyCell sx={{ fontSize: "0.7rem", py: 0.5 }} align="right">{formatVolume(volume)}</DataTableBodyCell>
+                              .map((item, idx) => (
+                                <TableRow key={idx}>
+                                  <DataTableBodyCell sx={{ fontSize: "0.7rem", py: 0.5 }}>
+                                    {new Date(item.expiry).toLocaleDateString("fr-FR")}
+                                  </DataTableBodyCell>
+                                  <DataTableBodyCell sx={{ fontSize: "0.7rem", py: 0.5 }} align="right" fontWeight="bold">
+                                    {formatVolume(item.total_volume || 0)}
+                                  </DataTableBodyCell>
+                                  <DataTableBodyCell sx={{ fontSize: "0.7rem", py: 0.5 }} align="right">
+                                    {((item.call_ratio || 0) * 100).toFixed(1)}%
+                                  </DataTableBodyCell>
                                 </TableRow>
                               ))}
                           </TableBody>

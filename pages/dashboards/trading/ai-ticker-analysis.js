@@ -15,6 +15,7 @@ import Footer from "/examples/Footer";
 import MDInput from "/components/MDInput";
 import MDButton from "/components/MDButton";
 import Autocomplete from "@mui/material/Autocomplete";
+import Skeleton from "@mui/material/Skeleton";
 import { searchStocks, POPULAR_STOCKS } from "/config/stockSymbols";
 
 import { useAuth } from "/hooks/useAuth";
@@ -24,8 +25,10 @@ import {
   TickerActivityAnalysis,
   TickerOptionsAnalysis,
   TickerInstitutionalAnalysis,
-  TickerNewsEventsAnalysis
+  TickerNewsEventsAnalysis,
+  OptionsFlowAnalysis
 } from "/pagesComponents/dashboards/trading/components/ai";
+import tickerActivityClient from "/lib/api/tickerActivityClient";
 
 function AITickerAnalysis() {
   const router = useRouter();
@@ -39,6 +42,9 @@ function AITickerAnalysis() {
   const [secondAnalysisComplete, setSecondAnalysisComplete] = useState(false);
   const [thirdAnalysisComplete, setThirdAnalysisComplete] = useState(false);
   const [fourthAnalysisComplete, setFourthAnalysisComplete] = useState(false);
+  const [fifthAnalysisComplete, setFifthAnalysisComplete] = useState(false);
+  const [priceData, setPriceData] = useState(null);
+  const [loadingPrice, setLoadingPrice] = useState(false);
 
   // Charger la liste de tickers depuis l'API au montage
   useEffect(() => {
@@ -109,6 +115,29 @@ function AITickerAnalysis() {
     loadTickers();
   }, []);
 
+  // Charger les prix actuels quand un ticker est sélectionné
+  useEffect(() => {
+    if (!selectedTicker) {
+      setPriceData(null);
+      return;
+    }
+
+    const loadPrice = async () => {
+      try {
+        setLoadingPrice(true);
+        const quote = await tickerActivityClient.getQuote(selectedTicker);
+        setPriceData(quote);
+      } catch (err) {
+        console.error("Error loading price:", err);
+        setPriceData(null);
+      } finally {
+        setLoadingPrice(false);
+      }
+    };
+
+    loadPrice();
+  }, [selectedTicker]);
+
   // Tous les hooks doivent être appelés avant tout return conditionnel
   const handleSearch = useCallback((value) => {
     if (value && value.trim()) {
@@ -121,6 +150,7 @@ function AITickerAnalysis() {
         setSecondAnalysisComplete(false);
         setThirdAnalysisComplete(false);
         setFourthAnalysisComplete(false);
+        setFifthAnalysisComplete(false);
       }
     }
   }, [selectedTicker]);
@@ -151,6 +181,14 @@ function AITickerAnalysis() {
 
   const handleFourthAnalysisComplete = useCallback((data) => {
     console.log("Ticker News Events Analysis completed:", data);
+    // Attendre 2 secondes avant de lancer la cinquième
+    setTimeout(() => {
+      setFourthAnalysisComplete(true);
+    }, 2000);
+  }, []);
+
+  const handleFifthAnalysisComplete = useCallback((data) => {
+    console.log("Options Flow Analysis completed:", data);
   }, []);
 
   // Options filtrées pour l'autocomplete
@@ -263,6 +301,89 @@ function AITickerAnalysis() {
           </MDBox>
         </Card>
 
+        {/* Prix Actuel */}
+        {selectedTicker && (
+          <Card sx={{ mb: 3 }}>
+            <MDBox p={3}>
+              <MDTypography variant="h6" fontWeight="bold" mb={2}>
+                Prix Actuel - {selectedTicker}
+              </MDTypography>
+              {loadingPrice ? (
+                <MDBox display="flex" gap={2}>
+                  <Skeleton variant="rectangular" width={150} height={60} />
+                  <Skeleton variant="rectangular" width={150} height={60} />
+                  <Skeleton variant="rectangular" width={150} height={60} />
+                </MDBox>
+              ) : priceData ? (
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={4}>
+                    <MDBox
+                      sx={{
+                        p: 2,
+                        borderRadius: 1,
+                        backgroundColor: "grey.50",
+                      }}
+                    >
+                      <MDTypography variant="subtitle2" fontWeight="bold" mb={1}>
+                        Prix Actuel
+                      </MDTypography>
+                      <MDTypography variant="h5" fontWeight="bold">
+                        ${priceData.price?.toFixed(2) || "N/A"}
+                      </MDTypography>
+                    </MDBox>
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                    <MDBox
+                      sx={{
+                        p: 2,
+                        borderRadius: 1,
+                        backgroundColor: "grey.50",
+                      }}
+                    >
+                      <MDTypography variant="subtitle2" fontWeight="bold" mb={1}>
+                        Variation
+                      </MDTypography>
+                      <MDTypography
+                        variant="h5"
+                        fontWeight="bold"
+                        color={
+                          priceData.changePercent >= 0 ? "success.main" : "error.main"
+                        }
+                      >
+                        {priceData.changePercent >= 0 ? "+" : ""}
+                        {priceData.changePercent?.toFixed(2) || "N/A"}%
+                      </MDTypography>
+                      <MDTypography variant="caption" color="text.secondary">
+                        {priceData.change >= 0 ? "+" : ""}${priceData.change?.toFixed(2) || "0.00"}
+                      </MDTypography>
+                    </MDBox>
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                    <MDBox
+                      sx={{
+                        p: 2,
+                        borderRadius: 1,
+                        backgroundColor: "grey.50",
+                      }}
+                    >
+                      <MDTypography variant="subtitle2" fontWeight="bold" mb={1}>
+                        Volume
+                      </MDTypography>
+                      <MDTypography variant="h5" fontWeight="bold">
+                        {priceData.volume?.toLocaleString() || "N/A"}
+                      </MDTypography>
+                    </MDBox>
+                  </Grid>
+                </Grid>
+              ) : (
+                <MDTypography variant="body2" color="text.secondary">
+                  Données de prix non disponibles
+                </MDTypography>
+              )}
+            </MDBox>
+          </Card>
+        )}
+
         {/* Analyses AI */}
         {selectedTicker ? (
           <Grid container spacing={3}>
@@ -294,6 +415,15 @@ function AITickerAnalysis() {
                 <TickerNewsEventsAnalysis
                   ticker={selectedTicker}
                   onAnalysisComplete={handleFourthAnalysisComplete}
+                />
+              </Grid>
+            )}
+            {fourthAnalysisComplete && (
+              <Grid item xs={12}>
+                <OptionsFlowAnalysis
+                  ticker={selectedTicker}
+                  delay={2000}
+                  onAnalysisComplete={handleFifthAnalysisComplete}
                 />
               </Grid>
             )}

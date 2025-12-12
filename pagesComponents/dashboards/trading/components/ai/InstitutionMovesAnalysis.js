@@ -437,21 +437,38 @@ function InstitutionMovesAnalysis({ institution_cik, institution_name, period = 
                       <MDTypography variant="subtitle2" fontWeight="bold" mb={1} color="success.main">
                         Top Performeurs
                       </MDTypography>
-                      {analysis.performance_analysis.top_performers.map((perf, idx) => (
-                        <MDBox key={idx} mb={1}>
-                          <MDBox display="flex" justifyContent="space-between" alignItems="center">
-                            <MDTypography variant="body2" fontWeight="bold">
-                              {perf.ticker}
-                            </MDTypography>
-                            <MDTypography variant="body2" color="success.main" fontWeight="bold">
-                              {formatPercentage(perf.pnl_pct)}
-                            </MDTypography>
+                      <TableContainer>
+                        <Table size="small">
+                          <MDBox component="thead">
+                            <TableRow>
+                              <DataTableHeadCell>Ticker</DataTableHeadCell>
+                              <DataTableHeadCell align="right">P&L %</DataTableHeadCell>
+                              <DataTableHeadCell align="right">Contribution</DataTableHeadCell>
+                            </TableRow>
                           </MDBox>
-                          <MDTypography variant="caption" color="text.secondary">
-                            Contribution: {formatPercentage(perf.contribution)}
-                          </MDTypography>
-                        </MDBox>
-                      ))}
+                          <TableBody>
+                            {analysis.performance_analysis.top_performers.map((perf, idx) => (
+                              <TableRow key={idx}>
+                                <DataTableBodyCell>
+                                  <MDTypography variant="body2" fontWeight="bold">
+                                    {perf.ticker}
+                                  </MDTypography>
+                                </DataTableBodyCell>
+                                <DataTableBodyCell align="right">
+                                  <MDTypography variant="body2" color="success.main" fontWeight="bold">
+                                    {formatPercentage(perf.pnl_pct)}
+                                  </MDTypography>
+                                </DataTableBodyCell>
+                                <DataTableBodyCell align="right">
+                                  <MDTypography variant="body2" color="success.main">
+                                    {formatPercentage(perf.contribution)}
+                                  </MDTypography>
+                                </DataTableBodyCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
                     </MDBox>
                   </Card>
                 </Grid>
@@ -463,21 +480,38 @@ function InstitutionMovesAnalysis({ institution_cik, institution_name, period = 
                       <MDTypography variant="subtitle2" fontWeight="bold" mb={1} color="error.main">
                         Sous-Performeurs
                       </MDTypography>
-                      {analysis.performance_analysis.underperformers.map((perf, idx) => (
-                        <MDBox key={idx} mb={1}>
-                          <MDBox display="flex" justifyContent="space-between" alignItems="center">
-                            <MDTypography variant="body2" fontWeight="bold">
-                              {perf.ticker}
-                            </MDTypography>
-                            <MDTypography variant="body2" color="error.main" fontWeight="bold">
-                              {formatPercentage(perf.pnl_pct)}
-                            </MDTypography>
+                      <TableContainer>
+                        <Table size="small">
+                          <MDBox component="thead">
+                            <TableRow>
+                              <DataTableHeadCell>Ticker</DataTableHeadCell>
+                              <DataTableHeadCell align="right">P&L %</DataTableHeadCell>
+                              <DataTableHeadCell align="right">Contribution</DataTableHeadCell>
+                            </TableRow>
                           </MDBox>
-                          <MDTypography variant="caption" color="text.secondary">
-                            Contribution: {formatPercentage(perf.contribution)}
-                          </MDTypography>
-                        </MDBox>
-                      ))}
+                          <TableBody>
+                            {analysis.performance_analysis.underperformers.map((perf, idx) => (
+                              <TableRow key={idx}>
+                                <DataTableBodyCell>
+                                  <MDTypography variant="body2" fontWeight="bold">
+                                    {perf.ticker}
+                                  </MDTypography>
+                                </DataTableBodyCell>
+                                <DataTableBodyCell align="right">
+                                  <MDTypography variant="body2" color="error.main" fontWeight="bold">
+                                    {formatPercentage(perf.pnl_pct)}
+                                  </MDTypography>
+                                </DataTableBodyCell>
+                                <DataTableBodyCell align="right">
+                                  <MDTypography variant="body2" color="error.main">
+                                    {formatPercentage(perf.contribution)}
+                                  </MDTypography>
+                                </DataTableBodyCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
                     </MDBox>
                   </Card>
                 </Grid>
@@ -557,7 +591,7 @@ function InstitutionMovesAnalysis({ institution_cik, institution_name, period = 
 
         {/* Next Moves to Watch */}
         {analysis.next_moves_to_watch && analysis.next_moves_to_watch.length > 0 && (
-          <MDBox>
+          <MDBox mb={3}>
             <MDTypography variant="h6" fontWeight="medium" mb={2}>
               Mouvements à Surveiller
             </MDTypography>
@@ -576,6 +610,21 @@ function InstitutionMovesAnalysis({ institution_cik, institution_name, period = 
             </MDBox>
           </MDBox>
         )}
+
+        {/* Cache Status & Timestamp */}
+        <Divider sx={{ my: 3 }} />
+        <MDBox display="flex" justifyContent="space-between" alignItems="center">
+          {data.cached && (
+            <MDTypography variant="caption" color="text.secondary">
+              Données mises en cache
+            </MDTypography>
+          )}
+          {data.timestamp && (
+            <MDTypography variant="caption" color="text.secondary">
+              Dernière mise à jour: {new Date(data.timestamp).toLocaleString("fr-FR")}
+            </MDTypography>
+          )}
+        </MDBox>
       </MDBox>
     </Card>
   );

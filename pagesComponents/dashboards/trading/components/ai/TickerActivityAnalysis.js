@@ -10,6 +10,7 @@ import Alert from "@mui/material/Alert";
 import Skeleton from "@mui/material/Skeleton";
 import Divider from "@mui/material/Divider";
 import Chip from "@mui/material/Chip";
+import Grid from "@mui/material/Grid";
 import intelligenceClient from "/lib/api/intelligenceClient";
 import AttentionLevelBadge from "./AttentionLevelBadge";
 
@@ -97,7 +98,7 @@ function TickerActivityAnalysis({ ticker, onAnalysisComplete }) {
     );
   }
 
-  const { analysis } = data;
+  const { analysis, price_data } = data;
 
   return (
     <Card>
@@ -112,6 +113,100 @@ function TickerActivityAnalysis({ ticker, onAnalysisComplete }) {
           </MDBox>
         </MDBox>
 
+        {/* Price Data */}
+        {price_data && (
+          <MDBox mb={3}>
+            <Grid container spacing={2}>
+              {price_data.current_price !== null && (
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card variant="outlined">
+                    <MDBox p={2}>
+                      <MDTypography variant="subtitle2" fontWeight="bold" mb={1}>
+                        Prix Actuel
+                      </MDTypography>
+                      <MDTypography variant="h6" fontWeight="bold">
+                        ${price_data.current_price?.toFixed(2) || "N/A"}
+                      </MDTypography>
+                    </MDBox>
+                  </Card>
+                </Grid>
+              )}
+              {price_data.price_change_pct !== null && (
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card variant="outlined">
+                    <MDBox p={2}>
+                      <MDTypography variant="subtitle2" fontWeight="bold" mb={1}>
+                        Variation
+                      </MDTypography>
+                      <MDTypography 
+                        variant="h6" 
+                        fontWeight="bold"
+                        color={price_data.price_change_pct >= 0 ? "success.main" : "error.main"}
+                      >
+                        {price_data.price_change_pct >= 0 ? "+" : ""}
+                        {price_data.price_change_pct?.toFixed(2) || "N/A"}%
+                      </MDTypography>
+                    </MDBox>
+                  </Card>
+                </Grid>
+              )}
+              {price_data.volume !== null && (
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card variant="outlined">
+                    <MDBox p={2}>
+                      <MDTypography variant="subtitle2" fontWeight="bold" mb={1}>
+                        Volume
+                      </MDTypography>
+                      <MDTypography variant="h6" fontWeight="bold">
+                        {price_data.volume?.toLocaleString() || "N/A"}
+                      </MDTypography>
+                    </MDBox>
+                  </Card>
+                </Grid>
+              )}
+              {(price_data.sentiment || price_data.trend) && (
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card variant="outlined">
+                    <MDBox p={2}>
+                      <MDTypography variant="subtitle2" fontWeight="bold" mb={1}>
+                        Sentiment
+                      </MDTypography>
+                      {price_data.sentiment && (
+                        <Chip
+                          label={price_data.sentiment}
+                          color={
+                            price_data.sentiment === "haussière" || price_data.sentiment === "bullish"
+                              ? "success"
+                              : price_data.sentiment === "baissière" || price_data.sentiment === "bearish"
+                              ? "error"
+                              : "default"
+                          }
+                          size="small"
+                          sx={{ mb: 0.5 }}
+                        />
+                      )}
+                      {price_data.trend && (
+                        <Chip
+                          label={price_data.trend}
+                          color={
+                            price_data.trend === "bullish"
+                              ? "success"
+                              : price_data.trend === "bearish"
+                              ? "error"
+                              : "default"
+                          }
+                          size="small"
+                          variant="outlined"
+                        />
+                      )}
+                    </MDBox>
+                  </Card>
+                </Grid>
+              )}
+            </Grid>
+          </MDBox>
+        )}
+
         {/* Overview */}
         <MDBox mb={3}>
           <MDTypography variant="h6" fontWeight="medium" mb={1}>
@@ -124,13 +219,199 @@ function TickerActivityAnalysis({ ticker, onAnalysisComplete }) {
 
         <Divider sx={{ my: 3 }} />
 
-        {/* Key Signals */}
-        {analysis.key_signals && analysis.key_signals.length > 0 && (
+        {/* Convergent Signals */}
+        {analysis.convergent_signals && analysis.convergent_signals.length > 0 && (
           <MDBox mb={3}>
             <MDTypography variant="h6" fontWeight="medium" mb={2}>
-              Signaux Clés
+              Signaux Convergents
             </MDTypography>
-            {analysis.key_signals.map((signal, idx) => (
+            {analysis.convergent_signals.map((signal, idx) => {
+              const signalText = typeof signal === 'string' ? signal : signal.description || signal.type || JSON.stringify(signal);
+              const signalType = typeof signal === 'object' ? signal.type : null;
+              const signalStrength = typeof signal === 'object' ? signal.strength : null;
+              const signalEvidence = typeof signal === 'object' ? signal.evidence : null;
+              
+              return (
+                <MDBox
+                  key={idx}
+                  sx={{
+                    p: 2,
+                    mb: 1.5,
+                    borderRadius: 1,
+                    backgroundColor: "success.50",
+                    borderLeft: 3,
+                    borderColor: "success.main",
+                  }}
+                >
+                  {signalType && (
+                    <MDTypography variant="subtitle2" fontWeight="bold" mb={0.5}>
+                      {signalType}
+                    </MDTypography>
+                  )}
+                  <MDTypography variant="body2" color="text">
+                    {signalText}
+                  </MDTypography>
+                  {signalStrength && (
+                    <MDTypography variant="caption" color="text.secondary" mt={0.5} display="block">
+                      Force: {signalStrength}
+                    </MDTypography>
+                  )}
+                  {signalEvidence && Array.isArray(signalEvidence) && (
+                    <MDBox mt={0.5}>
+                      {signalEvidence.map((ev, evIdx) => (
+                        <MDTypography key={evIdx} variant="caption" color="text.secondary" display="block">
+                          • {ev}
+                        </MDTypography>
+                      ))}
+                    </MDBox>
+                  )}
+                  {signalEvidence && typeof signalEvidence === 'string' && (
+                    <MDTypography variant="caption" color="text.secondary" mt={0.5} display="block">
+                      Preuve: {signalEvidence}
+                    </MDTypography>
+                  )}
+                </MDBox>
+              );
+            })}
+          </MDBox>
+        )}
+
+        {/* Divergent Signals */}
+        {analysis.divergent_signals && analysis.divergent_signals.length > 0 && (
+          <MDBox mb={3}>
+            <MDTypography variant="h6" fontWeight="medium" mb={2}>
+              Signaux Divergents
+            </MDTypography>
+            {analysis.divergent_signals.map((signal, idx) => {
+              const signalText = typeof signal === 'string' ? signal : signal.description || signal.type || JSON.stringify(signal);
+              const signalType = typeof signal === 'object' ? signal.type : null;
+              const signalStrength = typeof signal === 'object' ? signal.strength : null;
+              const signalEvidence = typeof signal === 'object' ? signal.evidence : null;
+              const signalInterpretation = typeof signal === 'object' ? signal.interpretation : null;
+              
+              return (
+                <MDBox
+                  key={idx}
+                  sx={{
+                    p: 2,
+                    mb: 1.5,
+                    borderRadius: 1,
+                    backgroundColor: "warning.50",
+                    borderLeft: 3,
+                    borderColor: "warning.main",
+                  }}
+                >
+                  {signalType && (
+                    <MDTypography variant="subtitle2" fontWeight="bold" mb={0.5}>
+                      {signalType}
+                    </MDTypography>
+                  )}
+                  <MDTypography variant="body2" color="text">
+                    {signalText}
+                  </MDTypography>
+                  {signalInterpretation && (
+                    <MDTypography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: "italic" }}>
+                      {signalInterpretation}
+                    </MDTypography>
+                  )}
+                  {signalStrength && (
+                    <MDTypography variant="caption" color="text.secondary" mt={0.5} display="block">
+                      Force: {signalStrength}
+                    </MDTypography>
+                  )}
+                  {signalEvidence && Array.isArray(signalEvidence) && (
+                    <MDBox mt={0.5}>
+                      {signalEvidence.map((ev, evIdx) => (
+                        <MDTypography key={evIdx} variant="caption" color="text.secondary" display="block">
+                          • {ev}
+                        </MDTypography>
+                      ))}
+                    </MDBox>
+                  )}
+                  {signalEvidence && typeof signalEvidence === 'string' && (
+                    <MDTypography variant="caption" color="text.secondary" mt={0.5} display="block">
+                      Preuve: {signalEvidence}
+                    </MDTypography>
+                  )}
+                </MDBox>
+              );
+            })}
+          </MDBox>
+        )}
+
+        {/* Trading Opportunities */}
+        {analysis.trading_opportunities && analysis.trading_opportunities.length > 0 && (
+          <MDBox mb={3}>
+            <MDTypography variant="h6" fontWeight="medium" mb={2}>
+              Opportunités de Trading
+            </MDTypography>
+            <Grid container spacing={2}>
+              {analysis.trading_opportunities.map((opp, idx) => (
+                <Grid item xs={12} sm={6} md={4} key={idx}>
+                  <Card variant="outlined" sx={{ p: 2, height: "100%" }}>
+                    <MDBox display="flex" alignItems="center" gap={1} mb={1}>
+                      <Chip
+                        label={opp.type?.toUpperCase()}
+                        size="small"
+                        color={
+                          opp.type === "long" ? "success" : opp.type === "short" ? "error" : "info"
+                        }
+                      />
+                      <Chip
+                        label={`Risque: ${opp.risk_level?.toUpperCase()}`}
+                        size="small"
+                        color={
+                          opp.risk_level === "faible" ? "success" : opp.risk_level === "élevé" ? "error" : "warning"
+                        }
+                        sx={{ ml: "auto" }}
+                      />
+                    </MDBox>
+                    <MDTypography variant="body2" color="text" mb={1}>
+                      {opp.description}
+                    </MDTypography>
+                    <MDTypography variant="caption" color="text.secondary" display="block" mb={0.5}>
+                      Stratégie: {opp.entry_strategy}
+                    </MDTypography>
+                    <MDTypography variant="caption" color="text.secondary">
+                      Horizon: {opp.time_horizon}
+                    </MDTypography>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </MDBox>
+        )}
+
+        {/* Risks */}
+        {analysis.risks && analysis.risks.length > 0 && (
+          <MDBox mb={3}>
+            <MDTypography variant="h6" fontWeight="medium" mb={2}>
+              Risques
+            </MDTypography>
+            {analysis.risks.map((risk, idx) => (
+              <Alert
+                key={idx}
+                severity={risk.probability === "élevé" ? "error" : risk.probability === "moyen" ? "warning" : "info"}
+                sx={{ mb: 1 }}
+              >
+                <MDTypography variant="subtitle2" fontWeight="bold" mb={0.5}>
+                  {risk.type?.toUpperCase()}: {risk.description}
+                </MDTypography>
+                <MDTypography variant="caption" display="block">
+                  Probabilité: {risk.probability} • Atténuation: {risk.mitigation}
+                </MDTypography>
+              </Alert>
+            ))}
+          </MDBox>
+        )}
+
+        {/* Key Insights */}
+        {analysis.key_insights && analysis.key_insights.length > 0 && (
+          <MDBox mb={3}>
+            <MDTypography variant="h6" fontWeight="medium" mb={2}>
+              Insights Clés
+            </MDTypography>
+            {analysis.key_insights.map((insight, idx) => (
               <MDBox
                 key={idx}
                 sx={{
@@ -140,23 +421,23 @@ function TickerActivityAnalysis({ ticker, onAnalysisComplete }) {
                   backgroundColor: "grey.50",
                   borderLeft: 3,
                   borderColor:
-                    signal.impact === "critique"
+                    insight.impact === "critique"
                       ? "error.main"
-                      : signal.impact === "élevé"
+                      : insight.impact === "élevé"
                       ? "warning.main"
-                      : signal.impact === "moyen"
+                      : insight.impact === "moyen"
                       ? "info.main"
                       : "default",
                 }}
               >
                 <MDBox display="flex" justifyContent="space-between" alignItems="center" mb={1}>
                   <MDTypography variant="subtitle2" fontWeight="bold">
-                    {signal.type}
+                    Insight {idx + 1}
                   </MDTypography>
-                  <AttentionLevelBadge level={signal.impact} />
+                  <AttentionLevelBadge level={insight.impact} />
                 </MDBox>
                 <MDTypography variant="body2" color="text">
-                  {signal.description}
+                  {insight.insight}
                 </MDTypography>
               </MDBox>
             ))}
