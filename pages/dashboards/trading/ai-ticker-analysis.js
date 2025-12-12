@@ -24,9 +24,9 @@ import fmpUWClient2 from "/lib/api/fmpUWClient2";
 import { 
   TickerActivityAnalysis,
   TickerOptionsAnalysis,
-  TickerInstitutionalAnalysis,
-  TickerNewsEventsAnalysis,
-  OptionsFlowAnalysis
+  TickerInstitutionalAnalysis
+  // TickerNewsEventsAnalysis - Désactivé
+  // OptionsFlowAnalysis - Désactivé
 } from "/pagesComponents/dashboards/trading/components/ai";
 import tickerActivityClient from "/lib/api/tickerActivityClient";
 
@@ -41,8 +41,8 @@ function AITickerAnalysis() {
   const [firstAnalysisComplete, setFirstAnalysisComplete] = useState(false);
   const [secondAnalysisComplete, setSecondAnalysisComplete] = useState(false);
   const [thirdAnalysisComplete, setThirdAnalysisComplete] = useState(false);
-  const [fourthAnalysisComplete, setFourthAnalysisComplete] = useState(false);
-  const [fifthAnalysisComplete, setFifthAnalysisComplete] = useState(false);
+  // const [fourthAnalysisComplete, setFourthAnalysisComplete] = useState(false); // Désactivé
+  // const [fifthAnalysisComplete, setFifthAnalysisComplete] = useState(false); // Désactivé
   const [priceData, setPriceData] = useState(null);
   const [loadingPrice, setLoadingPrice] = useState(false);
 
@@ -149,8 +149,8 @@ function AITickerAnalysis() {
         setFirstAnalysisComplete(false);
         setSecondAnalysisComplete(false);
         setThirdAnalysisComplete(false);
-        setFourthAnalysisComplete(false);
-        setFifthAnalysisComplete(false);
+        // setFourthAnalysisComplete(false); // Désactivé
+        // setFifthAnalysisComplete(false); // Désactivé
       }
     }
   }, [selectedTicker]);
@@ -173,23 +173,16 @@ function AITickerAnalysis() {
 
   const handleThirdAnalysisComplete = useCallback((data) => {
     console.log("Ticker Institutional Analysis completed:", data);
-    // Attendre 2 secondes avant de lancer la quatrième
-    setTimeout(() => {
-      setThirdAnalysisComplete(true);
-    }, 2000);
+    // Plus besoin d'attendre pour d'autres analyses (TickerNewsEventsAnalysis et OptionsFlowAnalysis désactivés)
   }, []);
 
-  const handleFourthAnalysisComplete = useCallback((data) => {
-    console.log("Ticker News Events Analysis completed:", data);
-    // Attendre 2 secondes avant de lancer la cinquième
-    setTimeout(() => {
-      setFourthAnalysisComplete(true);
-    }, 2000);
-  }, []);
+  // const handleFourthAnalysisComplete = useCallback((data) => {
+  //   console.log("Ticker News Events Analysis completed:", data);
+  // }, []); // Désactivé
 
-  const handleFifthAnalysisComplete = useCallback((data) => {
-    console.log("Options Flow Analysis completed:", data);
-  }, []);
+  // const handleFifthAnalysisComplete = useCallback((data) => {
+  //   console.log("Options Flow Analysis completed:", data);
+  // }, []); // Désactivé
 
   // Options filtrées pour l'autocomplete
   const filteredStockOptions = useMemo(() => {
@@ -410,15 +403,17 @@ function AITickerAnalysis() {
                 />
               </Grid>
             )}
-            {thirdAnalysisComplete && (
+            {/* TickerNewsEventsAnalysis désactivé */}
+            {/* {thirdAnalysisComplete && (
               <Grid item xs={12}>
                 <TickerNewsEventsAnalysis
                   ticker={selectedTicker}
                   onAnalysisComplete={handleFourthAnalysisComplete}
                 />
               </Grid>
-            )}
-            {fourthAnalysisComplete && (
+            )} */}
+            {/* OptionsFlowAnalysis désactivé */}
+            {/* {fourthAnalysisComplete && (
               <Grid item xs={12}>
                 <OptionsFlowAnalysis
                   ticker={selectedTicker}
@@ -426,7 +421,7 @@ function AITickerAnalysis() {
                   onAnalysisComplete={handleFifthAnalysisComplete}
                 />
               </Grid>
-            )}
+            )} */}
           </Grid>
         ) : (
           <Card>
