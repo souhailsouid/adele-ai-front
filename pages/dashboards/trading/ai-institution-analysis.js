@@ -19,7 +19,7 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
-import fmpUWClient2 from "/lib/api/fmpUWClient2";
+import unusualWhalesClient from "/lib/unusual-whales/client";
 import { useAuth } from "/hooks/useAuth";
 import withAuth from "/hocs/withAuth";
 import { InstitutionMovesAnalysis } from "/pagesComponents/dashboards/trading/components/ai";
@@ -31,19 +31,22 @@ function AIInstitutionAnalysis() {
   const [institutionInput, setInstitutionInput] = useState("");
   const [selectedInstitution, setSelectedInstitution] = useState(null);
   const [allInstitutions, setAllInstitutions] = useState([]);
+  const [loadingInstitutions, setLoadingInstitutions] = useState(true);
   const [period, setPeriod] = useState("3M");
 
-  // Charger toutes les institutions pour l'Autocomplete
+  // Charger toutes les institutions pour l'Autocomplete (même méthode que dans institutions.js)
   useEffect(() => {
     const loadAllInstitutions = async () => {
       try {
+        setLoadingInstitutions(true);
+        
         const params = {
           limit: 1000,
           order: "total_value",
           order_direction: "desc",
         };
 
-        const data = await fmpUWClient2.getUWInstitutions(params).catch((err) => {
+        const data = await unusualWhalesClient.getInstitutions(params).catch((err) => {
           console.error("Error loading all institutions:", err);
           return { data: [] };
         });
@@ -54,9 +57,36 @@ function AIInstitutionAnalysis() {
           return [];
         };
 
-        setAllInstitutions(extractData(data));
+        let institutions = extractData(data);
+        
+        // Normaliser les données pour s'assurer qu'elles ont le bon format
+        institutions = institutions.map((inst) => {
+          // Normaliser le CIK (format: 0001364742)
+          let cik = inst.cik || inst.ciK || inst.CIK || "";
+          if (cik && typeof cik === "string") {
+            // Enlever les espaces et normaliser le format
+            cik = cik.trim();
+            if (cik && !cik.startsWith("000")) {
+              // Ajouter les zéros en tête si nécessaire
+              cik = cik.padStart(10, "0");
+            }
+          } else if (cik && typeof cik === "number") {
+            cik = String(cik).padStart(10, "0");
+          }
+          
+          return {
+            cik: cik || "",
+            name: inst.name || inst.institutionName || inst.institution_name || inst.short_name || "",
+            total_value: inst.total_value || inst.totalValue || 0,
+          };
+        }).filter((inst) => inst.name && inst.cik); // Filtrer les institutions sans nom ou CIK
+        
+        setAllInstitutions(institutions);
       } catch (err) {
         console.error("Error loading institutions:", err);
+        setAllInstitutions([]);
+      } finally {
+        setLoadingInstitutions(false);
       }
     };
 
@@ -72,7 +102,8 @@ function AIInstitutionAnalysis() {
     return allInstitutions
       .filter((inst) => {
         const name = (inst.name || "").toLowerCase();
-        return name.includes(searchTerm);
+        const cik = (inst.cik || "").toLowerCase();
+        return name.includes(searchTerm) || cik.includes(searchTerm);
       })
       .slice(0, 20);
   }, [allInstitutions]);
@@ -89,10 +120,16 @@ function AIInstitutionAnalysis() {
   }
 
   const handleSearch = () => {
+    if (selectedInstitution && selectedInstitution.name) {
+      // Si une institution est déjà sélectionnée, on l'utilise
+      return;
+    }
+    
     if (institutionName) {
-      const institution = typeof institutionName === "string"
-        ? allInstitutions.find((inst) => inst.name === institutionName)
-        : institutionName;
+      // Chercher l'institution par nom (insensible à la casse)
+      const institution = allInstitutions.find(
+        (inst) => inst.name?.toLowerCase() === institutionName.toLowerCase()
+      );
 
       if (institution) {
         setSelectedInstitution({
@@ -100,10 +137,11 @@ function AIInstitutionAnalysis() {
           name: institution.name || institutionName,
         });
       } else {
-        // Si on ne trouve pas l'institution, on utilise juste le nom
+        // Si on ne trouve pas l'institution, on utilise juste le nom (mais l'API nécessite un CIK)
+        console.warn("Institution non trouvée dans la liste. CIK requis pour l'analyse.");
         setSelectedInstitution({
           cik: "",
-          name: typeof institutionName === "string" ? institutionName : institutionName.name || "",
+          name: institutionName,
         });
       }
     }
@@ -130,28 +168,74 @@ function AIInstitutionAnalysis() {
                 <Autocomplete
                   freeSolo
                   options={institutionOptions}
-                  value={institutionName ? (typeof institutionName === "string" ? institutionName : institutionName.name || institutionName) : ""}
+                  value={selectedInstitution || null}
+                  loading={loadingInstitutions}
                   getOptionLabel={(option) => {
                     if (typeof option === "string") return option;
-                    return option.name || "";
+                    if (!option) return "";
+                    const name = option.name || "";
+                    const cik = option.cik ? ` (CIK: ${option.cik})` : "";
+                    return `${name}${cik}`;
+                  }}
+                  isOptionEqualToValue={(option, value) => {
+                    if (!option || !value) return false;
+                    if (typeof option === "string" || typeof value === "string") {
+                      return option === value;
+                    }
+                    return option.cik === value.cik || option.name === value.name;
                   }}
                   onInputChange={(event, newInputValue) => {
                     setInstitutionInput(newInputValue || "");
                   }}
                   onChange={(event, newValue) => {
-                    if (typeof newValue === "string") {
-                      setInstitutionName(newValue.trim());
-                    } else if (newValue && newValue.name) {
-                      setInstitutionName(newValue.name.trim());
+                    if (newValue) {
+                      if (typeof newValue === "string") {
+                        // Si c'est une chaîne, chercher l'institution correspondante
+                        const found = allInstitutions.find(
+                          (inst) => inst.name?.toLowerCase() === newValue.toLowerCase()
+                        );
+                        if (found) {
+                          setSelectedInstitution({
+                            cik: found.cik || "",
+                            name: found.name || newValue,
+                          });
+                          setInstitutionName(found.name || newValue);
+                        } else {
+                          setInstitutionName(newValue);
+                          setSelectedInstitution(null);
+                        }
+                      } else if (newValue.name) {
+                        // Si c'est un objet, l'utiliser directement
+                        setSelectedInstitution({
+                          cik: newValue.cik || "",
+                          name: newValue.name || "",
+                        });
+                        setInstitutionName(newValue.name);
+                      }
                     } else {
+                      setSelectedInstitution(null);
                       setInstitutionName("");
                     }
                   }}
+                  renderOption={(props, option) => (
+                    <li {...props} key={option.cik || option.name || option}>
+                      <MDBox>
+                        <MDTypography variant="body2" fontWeight="bold">
+                          {typeof option === "string" ? option : option.name || "N/A"}
+                        </MDTypography>
+                        {typeof option === "object" && option.cik && (
+                          <MDTypography variant="caption" color="text.secondary">
+                            CIK: {option.cik}
+                          </MDTypography>
+                        )}
+                      </MDBox>
+                    </li>
+                  )}
                   renderInput={(params) => (
                     <MDInput
                       {...params}
-                      label="Rechercher une institution"
-                      placeholder="Ex: BLACKROCK, INC., VANGUARD GROUP INC"
+                      label={loadingInstitutions ? "Chargement des institutions..." : "Rechercher une institution"}
+                      placeholder={loadingInstitutions ? "Chargement..." : "Ex: BLACKROCK, INC., VANGUARD GROUP INC"}
                       variant="standard"
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
@@ -160,6 +244,7 @@ function AIInstitutionAnalysis() {
                       }}
                     />
                   )}
+                  noOptionsText={loadingInstitutions ? "Chargement..." : allInstitutions.length === 0 ? "Aucune institution trouvée" : "Aucun résultat"}
                   fullWidth
                 />
               </Grid>
