@@ -19,7 +19,7 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
-import unusualWhalesClient from "/lib/unusual-whales/client";
+import fmpUWClient2 from "/lib/api/fmpUWClient2";
 import { useAuth } from "/hooks/useAuth";
 import withAuth from "/hocs/withAuth";
 import { InstitutionMovesAnalysis } from "/pagesComponents/dashboards/trading/components/ai";
@@ -46,18 +46,50 @@ function AIInstitutionAnalysis() {
           order_direction: "desc",
         };
 
-        const data = await unusualWhalesClient.getInstitutions(params).catch((err) => {
+        const response = await fmpUWClient2.getUWInstitutions(params).catch((err) => {
           console.error("Error loading all institutions:", err);
-          return { data: [] };
+          return null;
         });
 
         const extractData = (response) => {
-          if (Array.isArray(response)) return response;
-          if (response?.data && Array.isArray(response.data)) return response.data;
+          if (!response) {
+            return [];
+          }
+          
+          // Si c'est directement un tableau
+          if (Array.isArray(response)) {
+            return response;
+          }
+          
+          // Si c'est un objet avec success et data
+          if (response?.success && response?.data) {
+            // Si data est directement un tableau
+            if (Array.isArray(response.data)) {
+              return response.data;
+            }
+            // Si data est un objet qui contient un tableau dans data.data
+            if (response.data?.data && Array.isArray(response.data.data)) {
+              return response.data.data;
+            }
+          }
+          
+          // Si c'est un objet avec une propriété data (format cache backend)
+          if (response?.data && Array.isArray(response.data)) {
+            return response.data;
+          }
+          
+          // Si c'est un objet avec une propriété qui pourrait être un tableau
+          const possibleArrayKeys = ['institutions', 'results', 'items'];
+          for (const key of possibleArrayKeys) {
+            if (response[key] && Array.isArray(response[key])) {
+              return response[key];
+            }
+          }
+          
           return [];
         };
 
-        let institutions = extractData(data);
+        let institutions = extractData(response);
         
         // Normaliser les données pour s'assurer qu'elles ont le bon format
         institutions = institutions.map((inst) => {
@@ -66,20 +98,27 @@ function AIInstitutionAnalysis() {
           if (cik && typeof cik === "string") {
             // Enlever les espaces et normaliser le format
             cik = cik.trim();
-            if (cik && !cik.startsWith("000")) {
-              // Ajouter les zéros en tête si nécessaire
+            // S'assurer que le CIK a 10 caractères avec des zéros en tête
+            if (cik && cik.length < 10) {
               cik = cik.padStart(10, "0");
             }
           } else if (cik && typeof cik === "number") {
             cik = String(cik).padStart(10, "0");
           }
           
+          const name = inst.name || inst.institutionName || inst.institution_name || inst.short_name || "";
+          
           return {
             cik: cik || "",
-            name: inst.name || inst.institutionName || inst.institution_name || inst.short_name || "",
+            name: name,
             total_value: inst.total_value || inst.totalValue || 0,
           };
-        }).filter((inst) => inst.name && inst.cik); // Filtrer les institutions sans nom ou CIK
+        }).filter((inst) => {
+          // Filtrer les institutions sans nom ou CIK valide
+          const hasName = inst.name && inst.name.trim().length > 0;
+          const hasCik = inst.cik && inst.cik.trim().length > 0;
+          return hasName && hasCik;
+        });
         
         setAllInstitutions(institutions);
       } catch (err) {
@@ -189,7 +228,7 @@ function AIInstitutionAnalysis() {
                   }}
                   onChange={(event, newValue) => {
                     if (newValue) {
-                      if (typeof newValue === "string") {
+                    if (typeof newValue === "string") {
                         // Si c'est une chaîne, chercher l'institution correspondante
                         const found = allInstitutions.find(
                           (inst) => inst.name?.toLowerCase() === newValue.toLowerCase()

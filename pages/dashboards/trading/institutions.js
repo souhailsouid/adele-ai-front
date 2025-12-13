@@ -24,7 +24,7 @@ import Autocomplete from "@mui/material/Autocomplete";
 import Chip from "@mui/material/Chip";
 
 // Services
-import unusualWhalesClient from "/lib/unusual-whales/client";
+import fmpUWClient2 from "/lib/api/fmpUWClient2";
 import intelligenceClient from "/lib/api/intelligenceClient";
 import withAuth from "/hocs/withAuth";
 import metricsService from "/services/metricsService";
@@ -85,18 +85,23 @@ function TradingInstitutions() {
         order_direction: "desc",
       };
 
-      const data = await unusualWhalesClient.getInstitutions(params).catch((err) => {
+      const response = await fmpUWClient2.getUWInstitutions(params).catch((err) => {
         console.error("Error loading all institutions:", err);
-        return { data: [] };
+        return null;
       });
 
       const extractData = (response) => {
+        if (!response) return [];
         if (Array.isArray(response)) return response;
+        if (response?.success && response?.data) {
+          if (Array.isArray(response.data)) return response.data;
+          if (response.data?.data && Array.isArray(response.data.data)) return response.data.data;
+        }
         if (response?.data && Array.isArray(response.data)) return response.data;
         return [];
       };
 
-      setAllInstitutions(extractData(data));
+      setAllInstitutions(extractData(response));
     } catch (err) {
       console.error("Error loading all institutions:", err);
     }
@@ -118,18 +123,23 @@ function TradingInstitutions() {
         params.name = institutionName.trim();
       }
 
-      const data = await unusualWhalesClient.getInstitutions(params).catch((err) => {
+      const response = await fmpUWClient2.getUWInstitutions(params).catch((err) => {
         console.error("Error loading institutions:", err);
-        return { data: [] };
+        return null;
       });
 
       const extractData = (response) => {
+        if (!response) return [];
         if (Array.isArray(response)) return response;
+        if (response?.success && response?.data) {
+          if (Array.isArray(response.data)) return response.data;
+          if (response.data?.data && Array.isArray(response.data.data)) return response.data.data;
+        }
         if (response?.data && Array.isArray(response.data)) return response.data;
         return [];
       };
 
-      setInstitutionsList(extractData(data));
+      setInstitutionsList(extractData(response));
     } catch (err) {
       console.error("Error loading Institutions:", err);
       setError(err.message || "Erreur lors du chargement des institutions");
