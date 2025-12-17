@@ -332,6 +332,16 @@ function getRoutes(user = null) {
           key: "intelligence-smart-money",
           route: "/dashboards/intelligence/smart-money",
         },
+        {
+          name: "Radar Options",
+          key: "trading-radar-options",
+          route: "/dashboards/trading/radar-options",
+        },
+        {
+          name: "Options Analysis",
+          key: "trading-options-analysis",
+          route: "/dashboards/trading/options-analysis",
+        },
       ],
     },
 

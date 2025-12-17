@@ -12,4 +12,6 @@ export { default as TickerActivityAnalysis } from "./TickerActivityAnalysis";
 export { default as TickerOptionsAnalysis } from "./TickerOptionsAnalysis";
 export { default as TickerInstitutionalAnalysis } from "./TickerInstitutionalAnalysis";
 export { default as TickerNewsEventsAnalysis } from "./TickerNewsEventsAnalysis";
+export { default as OptionsFiveFactorsAnalysis } from "./OptionsFiveFactorsAnalysis";
+export { default as OptionsAnalysis } from "./OptionsAnalysis";
 

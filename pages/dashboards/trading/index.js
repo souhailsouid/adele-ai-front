@@ -156,6 +156,26 @@ const navigationCards = [
     gradient: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
     category: "options",
   },
+  {
+    id: "radar-options",
+    title: "📡 Radar Options",
+    description: "Lecture qualitative options : exploitable ou à ignorer rapidement",
+    route: "/dashboards/trading/radar-options",
+    icon: "radar",
+    color: "error",
+    gradient: "linear-gradient(135deg, #30cfd0 0%, #330867 100%)",
+    category: "options",
+  },
+  {
+    id: "options-analysis",
+    title: "📊 Options Analysis",
+    description: "Analyse complète avec bias, niveaux clés et rapport détaillé",
+    route: "/dashboards/trading/options-analysis",
+    icon: "analytics",
+    color: "error",
+    gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    category: "options",
+  },
   
   // === INSIDERS & CONGRESS ===
   {
